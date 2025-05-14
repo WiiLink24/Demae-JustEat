@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/xml"
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
@@ -57,14 +56,6 @@ func shopList(r *Response) {
 
 func shopOne(r *Response) {
 	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
-	if err != nil {
-		r.ReportError(err)
-		return
-	}
-
-	// Determine if we have a basket
-	var basketId string
-	err = pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
 	if err != nil {
 		r.ReportError(err)
 		return
