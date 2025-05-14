@@ -364,7 +364,7 @@ type BrainTreeCreatePaypal struct {
 }
 
 type BrainTreePaymentResourceHead struct {
-	PaymentResource BrainTreeCreatePaypal `json:"paymentResource"`
+	PaymentResource BrainTreePaymentResource `json:"paymentResource"`
 }
 
 type BrainTreePaymentResource struct {

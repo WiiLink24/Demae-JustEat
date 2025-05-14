@@ -298,7 +298,9 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	a := 0
 	for _, _item := range items.Items {
 		if slices.Contains(category.ItemIds, _item.Id) {
-			j.DownloadFoodImage(_item.ImageSources[0].Path, shopID, _item.Id)
+			if len(_item.ImageSources) != 0 {
+				j.DownloadFoodImage(_item.ImageSources[0].Path, shopID, _item.Id)
+			}
 
 			if _item.Description == "" {
 				_item.Description = "No description"
