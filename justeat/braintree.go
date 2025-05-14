@@ -221,3 +221,89 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 	fmt.Println(string(data))
 	return &meta, nil
 }
+
+func makePaypalReturnURLTROLL(head BrainTreePaymentResourceHead) string {
+	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s", head.PaymentResource.PaymentToken)
+}
+
+func makePaypalReturnURL(token string, payerID string) string {
+	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s&PayerID=%s", token, payerID)
+}
+
+func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, fingerPrint string, returnURL string) (string, string, string) {
+	header := map[string]string{
+		"User-Agent":   "braintree/android/4.44.0",
+		"Content-Type": "application/json",
+	}
+
+	payload := map[string]any{
+		"_meta": map[string]any{
+			"platform":    "android",
+			"sessionId":   demae.IDGenerator(32, "0123456789abcdef"),
+			"source":      "paypal-browser",
+			"integration": "custom",
+		},
+		"paypalAccount": map[string]any{
+			"correlationId": meta.PairingID,
+			"intent":        "authorize",
+			"options": map[string]any{
+				"validate": false,
+			},
+			"client": map[string]string{},
+			"response": map[string]string{
+				"webURL": returnURL,
+			},
+			"response_type": "web",
+		},
+		"authorizationFingerprint": fingerPrint,
+	}
+
+	resp, err := j.BrainTreePOST(fmt.Sprintf("%s/v1/payment_methods/paypal_accounts", config.ClientAPIUrl), payload, header)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var m map[string]any
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	nonce := m["paypalAccounts"].([]any)[0].(map[string]any)["nonce"].(string)
+	email := m["paypalAccounts"].([]any)[0].(map[string]any)["details"].(map[string]any)["payerInfo"].(map[string]any)["email"].(string)
+	payerID := m["paypalAccounts"].([]any)[0].(map[string]any)["details"].(map[string]any)["payerInfo"].(map[string]any)["payerId"].(string)
+
+	return nonce, email, payerID
+}
+
+func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) {
+	payload := map[string]any{
+		"paymentMethod": "paypal_braintree",
+		"identifier":    orderID,
+		"additionalData": map[string]any{
+			"payerEmail": email,
+			"deviceData": map[string]any{"correlation_id": meta.PairingID},
+			"payerId":    payerID,
+		},
+		"paymentToken": nonce,
+	}
+
+	resp, err := j.httpPost(fmt.Sprintf("%s/payment/%s/authorize", j.KongAPIURL, strings.ToLower(string(j.Country))), payload)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(string(data))
+}

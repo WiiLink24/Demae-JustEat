@@ -168,11 +168,12 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 		log.Println(err)
 	}
 
-	_, err = j.getOrderID(basketId, total, config.Paypal.CurrencyCode)
+	orderId, err := j.getOrderID(basketId, total, config.Paypal.CurrencyCode)
 	if err != nil {
 		log.Println(err)
 	}
 
+	fmt.Println("Order ID: " + orderId)
 	// We have to get the entire basket.
 	basket, err := j.getBasket(basketId)
 	if err != nil {
