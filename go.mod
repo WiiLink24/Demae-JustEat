@@ -1,6 +1,6 @@
 module github.com/WiiLink24/DemaeJustEat
 
-go 1.22.0
+go 1.23.0
 
 require (
 	github.com/WiiLink24/nwc24 v0.0.0-20240814085438-31848a3afc3e
@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	golang.org/x/image v0.15.0
+	golang.org/x/text v0.22.0
 )
 
 require (
@@ -20,7 +21,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
-	golang.org/x/crypto v0.20.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 )
