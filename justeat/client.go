@@ -75,7 +75,7 @@ func (j *JEClient) setAuth() error {
 	var expiresAt time.Time
 	var refreshToken string
 	var acr string
-	row := j.db.QueryRow(ctx, QueryAuthExpiryTime, j.WiiID)
+	row := j.db.QueryRow(j.Context, QueryAuthExpiryTime, j.WiiID)
 	err := row.Scan(&expiresAt, &refreshToken, &acr)
 	if err != nil {
 		return err
@@ -84,12 +84,12 @@ func (j *JEClient) setAuth() error {
 	var auth string
 	if expiresAt.Before(time.Now().UTC()) {
 		// Generate the new auth token
-		auth, err = j.refreshAuthToken(ctx, j.db, refreshToken, acr, j.WiiID)
+		auth, err = j.refreshAuthToken(refreshToken, acr, j.WiiID)
 		if err != nil {
 			return err
 		}
 	} else {
-		row = j.db.QueryRow(ctx, QueryUserAuth, j.WiiID)
+		row = j.db.QueryRow(j.Context, QueryUserAuth, j.WiiID)
 		err = row.Scan(&auth)
 		if err != nil {
 			return err
@@ -100,7 +100,7 @@ func (j *JEClient) setAuth() error {
 	return nil
 }
 
-func (j *JEClient) refreshAuthToken(ctx context.Context, db *pgxpool.Pool, refreshToken, acr, hash string) (string, error) {
+func (j *JEClient) refreshAuthToken(refreshToken, acr, hash string) (string, error) {
 	_url := fmt.Sprintf("%s/identity/connect/token", j.KongAPIURL)
 
 	payload := url.Values{}
@@ -135,7 +135,7 @@ func (j *JEClient) refreshAuthToken(ctx context.Context, db *pgxpool.Pool, refre
 	auth := fmt.Sprintf("Bearer %s", temp.AccessToken)
 	expiresAt := time.Now().UTC().Add(time.Second * time.Duration(temp.ExpiresIn))
 
-	_, err = db.Exec(ctx, UpdateAuthToken, auth, temp.RefreshToken, expiresAt, hash)
+	_, err = j.db.Exec(j.Context, UpdateAuthToken, auth, temp.RefreshToken, expiresAt, hash)
 	if err != nil {
 		return "", err
 	}
