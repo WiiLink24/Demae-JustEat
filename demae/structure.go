@@ -3,15 +3,16 @@ package demae
 import "encoding/xml"
 
 type Config struct {
-	XMLName      xml.Name `xml:"Config"`
-	Address      string   `xml:"Address"`
-	SQLAddress   string   `xml:"SQLAddress"`
-	SQLUser      string   `xml:"SQLUser"`
-	SQLPass      string   `xml:"SQLPass"`
-	SQLDB        string   `xml:"SQLDB"`
-	ErrorWebhook string   `xml:"ErrorWebhook"`
-	OrderWebhook string   `xml:"OrderWebhook"`
-	SentryDSN    string   `xml:"SentryDSN"`
+	XMLName        xml.Name `xml:"Config"`
+	DemaeAddress   string   `xml:"DemaeAddress"`
+	JustEatAddress string   `xml:"JustEatAddress"`
+	SQLAddress     string   `xml:"SQLAddress"`
+	SQLUser        string   `xml:"SQLUser"`
+	SQLPass        string   `xml:"SQLPass"`
+	SQLDB          string   `xml:"SQLDB"`
+	ErrorWebhook   string   `xml:"ErrorWebhook"`
+	OrderWebhook   string   `xml:"OrderWebhook"`
+	SentryDSN      string   `xml:"SentryDSN"`
 }
 
 // KVField represents an individual node in form of <XMLName>Contents</XMLName>.

@@ -5,12 +5,14 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -54,7 +56,7 @@ func main() {
 	// Ensure this Postgresql connection is valid.
 	defer pool.Close()
 
-	fmt.Printf("Starting HTTP connection (%s)...\nNot using the usual port for HTTP?\nBe sure to use a proxy, otherwise the Wii can't connect!\n", config.Address)
+	fmt.Printf("Starting HTTP connection (%s)...\nNot using the usual port for HTTP?\nBe sure to use a proxy, otherwise the Wii can't connect!\n", config.DemaeAddress)
 	r := NewRoute()
 	nwapi := r.HandleGroup("nwapi.php")
 	{
@@ -90,5 +92,21 @@ func main() {
 		})
 	}
 
-	log.Fatal(http.ListenAndServe(config.Address, r.Handle()))
+	// Start the Demae Channel server as well as the Just Eat payment server.
+	actions := []func(*demae.Config, http.Handler){demaeMain, justeat.ServerMain}
+	handlers := []http.Handler{r.Handle(), nil}
+	wg := &sync.WaitGroup{}
+	wg.Add(len(actions))
+	for i, action := range actions {
+		go func(a func(*demae.Config, http.Handler)) {
+			defer wg.Done()
+			a(config, handlers[i])
+		}(action)
+	}
+
+	wg.Wait()
+}
+
+func demaeMain(config *demae.Config, handler http.Handler) {
+	log.Fatal(http.ListenAndServe(config.DemaeAddress, handler))
 }
