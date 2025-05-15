@@ -62,33 +62,42 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 		db:           db,
 	}
 
+	err = client.setAuth()
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func (j *JEClient) setAuth() error {
 	// First we want to see if our auth key has expired.
 	var expiresAt time.Time
 	var refreshToken string
 	var acr string
-	row := db.QueryRow(ctx, QueryAuthExpiryTime, hollywoodID)
-	err = row.Scan(&expiresAt, &refreshToken, &acr)
+	row := j.db.QueryRow(ctx, QueryAuthExpiryTime, j.WiiID)
+	err := row.Scan(&expiresAt, &refreshToken, &acr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var auth string
 	if expiresAt.Before(time.Now().UTC()) {
 		// Generate the new auth token
-		auth, err = client.refreshAuthToken(ctx, db, refreshToken, acr, hollywoodID)
+		auth, err = j.refreshAuthToken(ctx, j.db, refreshToken, acr, j.WiiID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	} else {
-		row = db.QueryRow(ctx, QueryUserAuth, hollywoodID)
+		row = j.db.QueryRow(ctx, QueryUserAuth, j.WiiID)
 		err = row.Scan(&auth)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	client.Auth = auth
-	return client, nil
+	j.Auth = auth
+	return nil
 }
 
 func (j *JEClient) refreshAuthToken(ctx context.Context, db *pgxpool.Pool, refreshToken, acr, hash string) (string, error) {

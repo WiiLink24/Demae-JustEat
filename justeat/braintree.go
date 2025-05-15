@@ -230,7 +230,7 @@ func makePaypalReturnURL(token string, payerID string) string {
 	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s&PayerID=%s", token, payerID)
 }
 
-func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, fingerPrint string, returnURL string) (string, string, string) {
+func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, fingerPrint string, returnURL string) (string, string, string, error) {
 	header := map[string]string{
 		"User-Agent":   "braintree/android/4.44.0",
 		"Content-Type": "application/json",
@@ -260,26 +260,26 @@ func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, f
 
 	resp, err := j.BrainTreePOST(fmt.Sprintf("%s/v1/payment_methods/paypal_accounts", config.ClientAPIUrl), payload, header)
 	if err != nil {
-		fmt.Println(err)
+		return "", "", "", err
 	}
 
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		return "", "", "", err
 	}
 
 	var m map[string]any
 	err = json.Unmarshal(data, &m)
 	if err != nil {
-		fmt.Println(err)
+		return "", "", "", err
 	}
 
 	nonce := m["paypalAccounts"].([]any)[0].(map[string]any)["nonce"].(string)
 	email := m["paypalAccounts"].([]any)[0].(map[string]any)["details"].(map[string]any)["payerInfo"].(map[string]any)["email"].(string)
 	payerID := m["paypalAccounts"].([]any)[0].(map[string]any)["details"].(map[string]any)["payerInfo"].(map[string]any)["payerId"].(string)
 
-	return nonce, email, payerID
+	return nonce, email, payerID, nil
 }
 
 func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) error {
