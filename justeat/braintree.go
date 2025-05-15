@@ -222,7 +222,7 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 	return &meta, nil
 }
 
-func makePaypalReturnURLTROLL(head BrainTreePaymentResourceHead) string {
+func makePaypalReturnURLFirst(head BrainTreePaymentResourceHead) string {
 	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s", head.PaymentResource.PaymentToken)
 }
 
@@ -282,13 +282,16 @@ func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, f
 	return nonce, email, payerID
 }
 
-func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) {
+func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) error {
+	// Really weird, the payload requires this field to be JSON encoded, then gets encoded again.
+	correlationId, _ := json.Marshal(map[string]any{"correlation_id": meta.PairingID})
+
 	payload := map[string]any{
 		"paymentMethod": "paypal_braintree",
 		"identifier":    orderID,
 		"additionalData": map[string]any{
 			"payerEmail": email,
-			"deviceData": map[string]any{"correlation_id": meta.PairingID},
+			"deviceData": string(correlationId),
 			"payerId":    payerID,
 		},
 		"paymentToken": nonce,
@@ -296,14 +299,15 @@ func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, 
 
 	resp, err := j.httpPost(fmt.Sprintf("%s/payment/%s/authorize", j.KongAPIURL, strings.ToLower(string(j.Country))), payload)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	fmt.Println(string(data))
+	return nil
 }

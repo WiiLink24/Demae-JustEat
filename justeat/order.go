@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func (j *JEClient) GetAvailableTimes(basketId string) ([]demae.KVFieldWChildren,
 	return times, err
 }
 
-func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
+func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 	storeId := r.PostForm.Get("shop[ShopCode]")
 	firstName := r.PostForm.Get("member[Name1]")
 	lastName := r.PostForm.Get("member[Name2]")
@@ -84,7 +83,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 
 	long, lat, city, err := j.getGeocodedAddress()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	user := CheckoutUser{
@@ -110,7 +109,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 	// TODO: Allow for choosing a scheduled time
 	times, err := j.getAvailableTimes(basketId)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	checkout := CheckoutFulfilment{
@@ -160,24 +159,23 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 
 	total, err := j.prepareCheckout(basketId, customerPatch, fulfilmentPatch, notesPatch, tippingPatch)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	config, err := j.getPayPalToken(storeId, basketId)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	orderId, err := j.getOrderID(basketId, total, config.Paypal.CurrencyCode)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
-	fmt.Println("Order ID: " + orderId)
 	// We have to get the entire basket.
 	basket, err := j.getBasket(basketId)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	var receiptItems []BrainTreeItem
@@ -244,21 +242,23 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 		AuthorizationFingerprint2: config.AuthFingerprint,
 	}
 
+	// United Kingdom edge case
 	if j.Country == UnitedKingdom {
 		brainTree.CountryCode = "GB"
 	}
 
 	head, err := j.makePaypalURL(config, brainTree)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	meta, err := j.sendPaypalMetadata()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	combined := CombinedBrainTree{
+		OrderID:         orderId,
 		Head:            *head,
 		BrainTree:       brainTree,
 		Metadata:        *meta,
@@ -268,15 +268,16 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) {
 	// Encode as JSON
 	combinedBytes, err := json.Marshal(combined)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	_, err = j.db.Exec(j.Context, UpdateBraintree, string(combinedBytes), j.WiiID)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
+
 	// Remaining parts of the process have to be completed post order.
-	// TODO: Figure out how to get the user the PayPal payment URL.
+	return nil
 }
 
 func (j *JEClient) prepareCheckout(basketId string, patches ...CheckoutPatch) (totalCost int, err error) {

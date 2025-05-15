@@ -26,7 +26,7 @@ type Client interface {
 	EditBasket(basketId string, r *http.Request) error
 	RemoveItem(basketId string, productId string, r *http.Request) error
 	GetAvailableTimes(basketId string) ([]demae.KVFieldWChildren, error)
-	PlaceOrder(r *http.Request, basketId string)
+	PlaceOrder(r *http.Request, basketId string) error
 }
 
 type JEClient struct {
