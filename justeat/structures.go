@@ -431,6 +431,7 @@ type PaypalMetadata struct {
 
 type CombinedBrainTree struct {
 	OrderID         string                       `json:"orderId"`
+	Country         Country                      `json:"country"`
 	Head            BrainTreePaymentResourceHead `json:"head"`
 	BrainTree       BrainTreeCreatePaypal        `json:"brainTree"`
 	Metadata        PaypalMetadata               `json:"metadata"`

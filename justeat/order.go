@@ -259,6 +259,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 
 	combined := CombinedBrainTree{
 		OrderID:         orderId,
+		Country:         j.Country,
 		Head:            *head,
 		BrainTree:       brainTree,
 		Metadata:        *meta,
