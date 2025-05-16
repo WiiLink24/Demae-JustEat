@@ -6,11 +6,15 @@ toolchain go1.23.9
 
 require (
 	github.com/WiiLink24/nwc24 v0.0.0-20240814085438-31848a3afc3e
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/getsentry/sentry-go v0.27.0
+	github.com/gin-gonic/gin v1.10.0
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/logrusorgru/aurora/v4 v4.0.0
-	golang.org/x/image v0.15.0
+	golang.org/x/image v0.18.0
+	golang.org/x/oauth2 v0.30.0
+	golang.org/x/text v0.23.0
 )
 
 require (
@@ -18,10 +22,8 @@ require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/coreos/go-oidc/v3 v3.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -47,9 +49,7 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
