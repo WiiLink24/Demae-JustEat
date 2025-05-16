@@ -39,7 +39,7 @@ type JEClient struct {
 	Address      string
 	PostalCode   string
 	WiiID        string
-	db           *pgxpool.Pool
+	Db           *pgxpool.Pool
 }
 
 // NewClient constructs either an instance of JEClient or skip.Client.
@@ -53,16 +53,16 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 	client := &JEClient{
 		Context:      ctx,
 		Country:      country,
-		KongAPIURL:   kongAPIURLs[country],
-		GlobalAPIURL: globalMenuCDNURLs[country],
-		CheckoutURL:  checkoutURLs[country],
+		KongAPIURL:   KongAPIURLs[country],
+		GlobalAPIURL: GlobalMenuCDNURLs[country],
+		CheckoutURL:  CheckoutURLs[country],
 		Address:      req.Header.Get("X-Address"),
 		PostalCode:   req.Header.Get("X-PostalCode"),
 		WiiID:        hollywoodID,
-		db:           db,
+		Db:           db,
 	}
 
-	err = client.setAuth()
+	err = client.SetAuth()
 	if err != nil {
 		return nil, err
 	}
@@ -70,12 +70,12 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 	return client, nil
 }
 
-func (j *JEClient) setAuth() error {
+func (j *JEClient) SetAuth() error {
 	// First we want to see if our auth key has expired.
 	var expiresAt time.Time
 	var refreshToken string
 	var acr string
-	row := j.db.QueryRow(j.Context, QueryAuthExpiryTime, j.WiiID)
+	row := j.Db.QueryRow(j.Context, QueryAuthExpiryTime, j.WiiID)
 	err := row.Scan(&expiresAt, &refreshToken, &acr)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (j *JEClient) setAuth() error {
 			return err
 		}
 	} else {
-		row = j.db.QueryRow(j.Context, QueryUserAuth, j.WiiID)
+		row = j.Db.QueryRow(j.Context, QueryUserAuth, j.WiiID)
 		err = row.Scan(&auth)
 		if err != nil {
 			return err
@@ -135,7 +135,7 @@ func (j *JEClient) refreshAuthToken(refreshToken, acr, hash string) (string, err
 	auth := fmt.Sprintf("Bearer %s", temp.AccessToken)
 	expiresAt := time.Now().UTC().Add(time.Second * time.Duration(temp.ExpiresIn))
 
-	_, err = j.db.Exec(j.Context, UpdateAuthToken, auth, temp.RefreshToken, expiresAt, hash)
+	_, err = j.Db.Exec(j.Context, UpdateAuthToken, auth, temp.RefreshToken, expiresAt, hash)
 	if err != nil {
 		return "", err
 	}

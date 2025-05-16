@@ -1,0 +1,17 @@
+<script>
+    function popup() {
+        let button = document.getElementById("payment");
+        button.onclick = () => {
+            window.open({{ .URL }});
+        }
+    }
+
+    function done() {
+        // Send a POST request to /finalize with the hollywood in the POST form.
+    }
+</script>
+
+<button id="payment" onclick="popup()">Click here to pay</button>
+<h1>When you paid, click the blue button to finalize the order. Press red to cancel the order</h1>
+<button id="done" onclick="done()">blue</button>
+<button id="cancel">red</button>

@@ -272,7 +272,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 		return err
 	}
 
-	_, err = j.db.Exec(j.Context, UpdateBraintree, string(combinedBytes), j.WiiID)
+	_, err = j.Db.Exec(j.Context, UpdateBraintree, string(combinedBytes), j.WiiID)
 	if err != nil {
 		return err
 	}

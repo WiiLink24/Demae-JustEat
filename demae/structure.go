@@ -1,18 +1,37 @@
 package demae
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"golang.org/x/oauth2"
+)
+
+type OIDCConfig struct {
+	XMLName      xml.Name `xml:"oidc"`
+	ClientID     string   `xml:"clientID"`
+	ClientSecret string   `xml:"clientSecret"`
+	RedirectURL  string   `xml:"redirectURL"`
+	Scopes       []string `xml:"scopes"`
+	Provider     string   `xml:"provider"`
+}
 
 type Config struct {
-	XMLName        xml.Name `xml:"Config"`
-	DemaeAddress   string   `xml:"DemaeAddress"`
-	JustEatAddress string   `xml:"JustEatAddress"`
-	SQLAddress     string   `xml:"SQLAddress"`
-	SQLUser        string   `xml:"SQLUser"`
-	SQLPass        string   `xml:"SQLPass"`
-	SQLDB          string   `xml:"SQLDB"`
-	ErrorWebhook   string   `xml:"ErrorWebhook"`
-	OrderWebhook   string   `xml:"OrderWebhook"`
-	SentryDSN      string   `xml:"SentryDSN"`
+	XMLName        xml.Name   `xml:"Config"`
+	DemaeAddress   string     `xml:"DemaeAddress"`
+	JustEatAddress string     `xml:"JustEatAddress"`
+	SQLAddress     string     `xml:"SQLAddress"`
+	SQLUser        string     `xml:"SQLUser"`
+	SQLPass        string     `xml:"SQLPass"`
+	SQLDB          string     `xml:"SQLDB"`
+	ErrorWebhook   string     `xml:"ErrorWebhook"`
+	OrderWebhook   string     `xml:"OrderWebhook"`
+	SentryDSN      string     `xml:"SentryDSN"`
+	OIDCConfig     OIDCConfig `xml:"oidc"`
+}
+
+type AppAuthConfig struct {
+	OAuth2Config *oauth2.Config
+	Provider     *oidc.Provider
 }
 
 // KVField represents an individual node in form of <XMLName>Contents</XMLName>.

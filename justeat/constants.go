@@ -68,7 +68,7 @@ var languageCodes = map[Country]string{
 	UnitedKingdom: "en-GB",
 }
 
-var kongAPIURLs = map[Country]string{
+var KongAPIURLs = map[Country]string{
 	Australia:     "https://aus.api.just-eat.io",
 	Austria:       "https://rest.api.eu-central-1.production.jet-external.com",
 	Germany:       "https://rest.api.eu-central-1.production.jet-external.com",
@@ -79,12 +79,12 @@ var kongAPIURLs = map[Country]string{
 	UnitedKingdom: "https://uk.api.just-eat.io",
 }
 
-var globalMenuCDNURLs = map[Country]string{
+var GlobalMenuCDNURLs = map[Country]string{
 	Italy:         "https://menu-globalmenucdn.justeat-int.com",
 	UnitedKingdom: "https://menu-globalmenucdn.je-apis.com",
 }
 
-var checkoutURLs = map[Country]string{
+var CheckoutURLs = map[Country]string{
 	UnitedKingdom: "https://app-android.just-eat.co.uk",
 }
 

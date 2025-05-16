@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
-	"github.com/WiiLink24/DemaeJustEat/justeat"
+	"github.com/WiiLink24/DemaeJustEat/justeat/server"
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	// Start the Demae Channel server as well as the Just Eat payment server.
-	actions := []func(*demae.Config, http.Handler){demaeMain, justeat.ServerMain}
+	actions := []func(*demae.Config, http.Handler){demaeMain, server.RunServer}
 	handlers := []http.Handler{r.Handle(), nil}
 	wg := &sync.WaitGroup{}
 	wg.Add(len(actions))

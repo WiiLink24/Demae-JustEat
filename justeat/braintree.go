@@ -222,15 +222,15 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 	return &meta, nil
 }
 
-func makePaypalReturnURLFirst(head BrainTreePaymentResourceHead) string {
+func MakePaypalReturnURLFirst(head BrainTreePaymentResourceHead) string {
 	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s", head.PaymentResource.PaymentToken)
 }
 
-func makePaypalReturnURL(token string, payerID string) string {
+func MakePaypalReturnURL(token string, payerID string) string {
 	return fmt.Sprintf("customer-details-oneapp.braintree://onetouch/v1/success?token=%s&PayerID=%s", token, payerID)
 }
 
-func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, fingerPrint string, returnURL string) (string, string, string, error) {
+func (j *JEClient) GetPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, fingerPrint string, returnURL string) (string, string, string, error) {
 	header := map[string]string{
 		"User-Agent":   "braintree/android/4.44.0",
 		"Content-Type": "application/json",
@@ -282,7 +282,7 @@ func (j *JEClient) getPaypalNonce(config BrainTreeConfig, meta PaypalMetadata, f
 	return nonce, email, payerID, nil
 }
 
-func (j *JEClient) sendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) error {
+func (j *JEClient) SendPayment(meta PaypalMetadata, nonce string, email string, payerID string, orderID string) error {
 	// Really weird, the payload requires this field to be JSON encoded, then gets encoded again.
 	correlationId, _ := json.Marshal(map[string]any{"correlation_id": meta.PairingID})
 
