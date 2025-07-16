@@ -124,8 +124,8 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 		AppLastUpdateTime:   demae.RandIntWRange(1704277731000, 1745762494502),
 		ConfURL:             "https://www.paypalobjects.com/rdaAssets/magnes/magnes_android_rec.json",
 		CompVersion:         "5.5.0.release",
-		DeviceModel:         "SM-F946B",
-		DeviceName:          "Samsung SM-F946B",
+		DeviceModel:         j.DeviceModel,
+		DeviceName:          "Samsung " + j.DeviceModel,
 		GSFID:               demae.IDGenerator(16, "0123456789abcdef"),
 		IsEmulator:          false,
 		EF:                  "00000",
@@ -181,8 +181,7 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 	}
 
 	headers := map[string]string{
-		// TODO: Cycle through device models
-		"device_model":                  "SM-F946B",
+		"device_model":                  j.DeviceModel,
 		"app_version":                   "11.0.0.1610004768",
 		"X-PAYPAL-RESPONSE-DATA-FORMAT": "NV",
 		"os_version":                    "11",
@@ -192,7 +191,7 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 		"app_id":                        "JUST-EAT-APP",
 		"comp_version":                  "5.5.0.release",
 		"Content-Type":                  "application/x-www-form-urlencoded",
-		"User-Agent":                    "Dalvik/2.1.0 (Linux; U; Android 11; SM-F946B Build/RQ3A.211001.001)",
+		"User-Agent":                    fmt.Sprintf("Dalvik/2.1.0 (Linux; U; Android 11; %s Build/RQ3A.211001.001)", j.DeviceModel),
 	}
 
 	// We have to encode as x-www-form-urlencoded.

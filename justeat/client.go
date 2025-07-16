@@ -39,6 +39,7 @@ type JEClient struct {
 	Address      string
 	PostalCode   string
 	WiiID        string
+	DeviceModel  string
 	Db           *pgxpool.Pool
 }
 
@@ -75,28 +76,20 @@ func (j *JEClient) SetAuth() error {
 	var expiresAt time.Time
 	var refreshToken string
 	var acr string
-	row := j.Db.QueryRow(j.Context, QueryAuthExpiryTime, j.WiiID)
-	err := row.Scan(&expiresAt, &refreshToken, &acr)
+	row := j.Db.QueryRow(j.Context, QueryUserData, j.WiiID)
+	err := row.Scan(&j.Auth, &expiresAt, &refreshToken, &acr, &j.DeviceModel)
 	if err != nil {
 		return err
 	}
 
-	var auth string
 	if expiresAt.Before(time.Now().UTC()) {
 		// Generate the new auth token
-		auth, err = j.refreshAuthToken(refreshToken, acr, j.WiiID)
-		if err != nil {
-			return err
-		}
-	} else {
-		row = j.Db.QueryRow(j.Context, QueryUserAuth, j.WiiID)
-		err = row.Scan(&auth)
+		j.Auth, err = j.refreshAuthToken(refreshToken, acr, j.WiiID)
 		if err != nil {
 			return err
 		}
 	}
 
-	j.Auth = auth
 	return nil
 }
 

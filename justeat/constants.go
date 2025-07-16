@@ -10,11 +10,9 @@ var (
 )
 
 const (
-	QueryUserAuth       = `SELECT authentication FROM users WHERE wii_id = $1`
-	QueryRefreshToken   = `SELECT refresh_token FROM users WHERE wii_id = $1`
-	QueryAuthExpiryTime = `SELECT expires_at, refresh_token, acr FROM users WHERE wii_id = $1`
-	UpdateAuthToken     = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
-	UpdateBraintree     = `UPDATE users SET braintree = $1 WHERE wii_id = $2`
+	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
+	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
+	UpdateBraintree = `UPDATE users SET braintree = $1 WHERE wii_id = $2`
 )
 
 // MaxNumberOfRestaurants is required due to Wii memory constraints.
