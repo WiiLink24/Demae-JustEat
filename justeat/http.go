@@ -10,8 +10,11 @@ import (
 	"strings"
 )
 
+var UserAgent = func(deviceId string) string {
+	return fmt.Sprintf("[JUST-EAT-APP/%s/Android - %s - 11 (API 30)]", ApplicationVersion, deviceId)
+}
+
 const (
-	UserAgent          = "[JUST-EAT-APP/11.0.0.1610004768/Android - SM-X900N - 11 (API 30)]"
 	ApplicationID      = "4"
 	ApplicationVersion = "11.0.0.1610004768"
 	Accept             = "application/json,text/json"
@@ -24,7 +27,7 @@ func (j *JEClient) httpGet(url string) (*http.Response, error) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
 
-	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
 	req.Header.Set("Accept-Language", languageCodes[j.Country])
@@ -49,7 +52,7 @@ func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, 
 	client := &http.Client{}
 	req, _ := http.NewRequest(method, url, bytes.NewReader(data))
 
-	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
 	req.Header.Set("Accept-Language", languageCodes[j.Country])
@@ -92,7 +95,7 @@ func (j *JEClient) unauthorizedPost(url string, body url.Values) (*http.Response
 	basicStr := fmt.Sprintf("%s:%s", clientNames[j.Country], clientUUIDs[j.Country])
 	auth := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(basicStr)))
 
-	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
 	req.Header.Set("Accept-Language", languageCodes[j.Country])
