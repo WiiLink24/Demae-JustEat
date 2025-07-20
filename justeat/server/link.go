@@ -53,13 +53,21 @@ func getGenericHeaders(c *gin.Context) (map[string]string, error) {
 func getLoginData(c *gin.Context) {
 	country := c.Query("country")
 	if country == "" {
-		c.JSON(http.StatusBadRequest, gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "country is required",
+		})
+		return
 	}
 
 	countryConv := justeat.Country(country)
 
 	header, err := getGenericHeaders(c)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
 		return
 	}
 
