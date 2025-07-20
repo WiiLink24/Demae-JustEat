@@ -155,7 +155,7 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 		IpAddrs:           "192.168.1.100",
 		IpAddresses:       []string{"192.168.1.100"},
 		LocaleCountry:     string(j.Country),
-		LocaleLang:        strings.Split(languageCodes[j.Country], "-")[0],
+		LocaleLang:        strings.Split(LanguageCodes[j.Country], "-")[0],
 		PhoneType:         "gsm",
 		RiskCompSessionID: demae.UUID(),
 		Roaming:           false,

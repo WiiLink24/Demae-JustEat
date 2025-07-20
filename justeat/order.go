@@ -235,7 +235,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 		ExperienceProfile: BrainTreeExperience{
 			NoShipping:      true,
 			BrandName:       "Just Eat",
-			LocaleCode:      languageCodes[j.Country],
+			LocaleCode:      LanguageCodes[j.Country],
 			UserAction:      "commit",
 			AddressOverride: true,
 		},

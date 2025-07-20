@@ -156,7 +156,7 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 					ItemCode:   demae.CDATA{Value: item.Id},
 					Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
 					Price:      demae.CDATA{Value: 0},
-					Info:       demae.CDATA{Value: ""}, // demae.RemoveInvalidCharacters(_item.Description)
+					Info:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Description)},
 					Size:       nil,
 					IsSelected: nil,
 					Image:      demae.CDATA{Value: item.Id},

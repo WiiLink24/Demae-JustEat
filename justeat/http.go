@@ -30,7 +30,7 @@ func (j *JEClient) httpGet(url string) (*http.Response, error) {
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
-	req.Header.Set("Accept-Language", languageCodes[j.Country])
+	req.Header.Set("Accept-Language", LanguageCodes[j.Country])
 	req.Header.Set("Accept-Charset", "utf-8")
 	req.Header.Set("Accept-Tenant", string(j.Country))
 	req.Header.Set("Accept", Accept)
@@ -55,7 +55,7 @@ func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, 
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
-	req.Header.Set("Accept-Language", languageCodes[j.Country])
+	req.Header.Set("Accept-Language", LanguageCodes[j.Country])
 	req.Header.Set("Accept-Charset", "utf-8")
 	req.Header.Set("Accept-Tenant", string(j.Country))
 	req.Header.Set("Accept", Accept)
@@ -92,13 +92,13 @@ func (j *JEClient) unauthorizedPost(url string, body url.Values) (*http.Response
 	req, _ := http.NewRequest("POST", url, strings.NewReader(body.Encode()))
 
 	// The authorization is a combination of the application's UUID and name.
-	basicStr := fmt.Sprintf("%s:%s", clientNames[j.Country], clientUUIDs[j.Country])
+	basicStr := fmt.Sprintf("%s:%s", ClientNames[j.Country], ClientUUIDs[j.Country])
 	auth := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(basicStr)))
 
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
 	req.Header.Set("Application-Id", ApplicationID)
 	req.Header.Set("Application-Version", ApplicationVersion)
-	req.Header.Set("Accept-Language", languageCodes[j.Country])
+	req.Header.Set("Accept-Language", LanguageCodes[j.Country])
 	req.Header.Set("Accept-Charset", "utf-8")
 	req.Header.Set("Accept-Tenant", string(j.Country))
 	req.Header.Set("Accept", Accept)

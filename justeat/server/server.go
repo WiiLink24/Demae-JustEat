@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/logrusorgru/aurora/v4"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
@@ -67,6 +68,8 @@ func RunServer(config *demae.Config, handler http.Handler) {
 	r.GET("/login", LoginPage)
 	r.GET("/start", StartPanelHandler)
 	r.GET("/authorize", FinishPanelHandler)
+	r.GET("/userdatalogin.json", getLoginData)
+	r.GET("/2fadata.json", get2FAData)
 
 	auth := r.Group("/")
 	auth.Use(AuthenticationMiddleware(verifier))
@@ -75,7 +78,13 @@ func RunServer(config *demae.Config, handler http.Handler) {
 		auth.POST("/finalize", finalizePayment)
 	}
 
-	fmt.Printf("Starting HTTP connection (%s)...\nJust Eat Payment server connected!\n", config.JustEatAddress)
+	authLink := r.Group("/")
+	authLink.Use(AuthenticationLinkerMiddleware(verifier))
+	{
+		authLink.POST("/link", saveUserData)
+	}
+
+	fmt.Printf("Starting HTTP connection (%s)...\n%s\n", aurora.Yellow(config.JustEatAddress), aurora.Green("Just Eat Payment server connected!"))
 	log.Fatal(r.Run(config.JustEatAddress))
 }
 

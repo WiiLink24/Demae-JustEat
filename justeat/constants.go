@@ -13,6 +13,7 @@ const (
 	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
 	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
 	UpdateBraintree = `UPDATE users SET braintree = $1 WHERE wii_id = $2`
+	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model) VALUES ($1, $2, $3, $4, $5)`
 )
 
 // MaxNumberOfRestaurants is required due to Wii memory constraints.
@@ -33,7 +34,7 @@ const (
 	Invalid       Country = ""
 )
 
-var clientNames = map[Country]string{
+var ClientNames = map[Country]string{
 	Australia:     "consumer_android_je",
 	Austria:       "consumer_android_je",
 	Germany:       "consumer_android_je",
@@ -44,7 +45,7 @@ var clientNames = map[Country]string{
 	UnitedKingdom: "consumer_android_je",
 }
 
-var clientUUIDs = map[Country]string{
+var ClientUUIDs = map[Country]string{
 	Australia:     "50158598-42d0-41e4-aaff-9c5419c82215",
 	Austria:       "50158598-42d0-41e4-aaff-9c5419c82215",
 	Germany:       "50158598-42d0-41e4-aaff-9c5419c82215",
@@ -55,7 +56,7 @@ var clientUUIDs = map[Country]string{
 	UnitedKingdom: "50158598-42d0-41e4-aaff-9c5419c82215",
 }
 
-var languageCodes = map[Country]string{
+var LanguageCodes = map[Country]string{
 	Australia:     "en-AU",
 	Austria:       "de-AT",
 	Germany:       "de-DE",
@@ -95,4 +96,15 @@ var timeZones = map[Country]string{
 	NewZealand:    "Pacific/Auckland",
 	Spain:         "Europe/Madrid",
 	UnitedKingdom: "Europe/London",
+}
+
+var AuthenticationURLs = map[Country]string{
+	Australia:     "https://auth.menulog.com.au",
+	Austria:       "https://auth.lieferando.at",
+	Germany:       "https://auth.lieferando.de",
+	Ireland:       "https://auth.just-eat.ie",
+	Italy:         "https://auth.justeat.it",
+	NewZealand:    "https://auth.menulog.com.au",
+	Spain:         "https://auth.just-eat.es",
+	UnitedKingdom: "https://auth.just-eat.co.uk",
 }
