@@ -82,6 +82,7 @@ func AuthenticationLinkerMiddleware(verifier *oidc.IDTokenVerifier) gin.HandlerF
 
 		c.Set("uid", claims.UserId)
 		c.Set("wiis", claims.Wiis)
+		c.Set("email", claims.Email)
 		c.Next()
 	}
 }

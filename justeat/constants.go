@@ -13,7 +13,7 @@ const (
 	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
 	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
 	UpdateBraintree = `UPDATE users SET braintree = $1 WHERE wii_id = $2`
-	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model) VALUES ($1, $2, $3, $4, $5)`
+	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model, email, wii_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 )
 
 // MaxNumberOfRestaurants is required due to Wii memory constraints.

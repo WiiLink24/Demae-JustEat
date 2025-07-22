@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
+	"github.com/WiiLink24/nwc24"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net"
@@ -121,12 +122,18 @@ func saveUserData(c *gin.Context) {
 		return
 	}
 
+	// Convert Wii number to object.
+	// Since the Wii is linked, we can skip any checks.
+	wiiNoInt, _ := strconv.ParseUint(wiiNoStr, 10, 64)
+	wiiNo := nwc24.LoadWiiNumber(wiiNoInt)
+
 	// We can now link.
 	auth := c.PostForm("eat_auth")
 	refreshToken := c.PostForm("refresh_token")
 	expireTime := c.PostForm("expire_time")
 	deviceModel := c.PostForm("device_model")
 	acr := c.PostForm("acr")
+	email, _ := c.Get("email")
 
 	intExpireTime, err := strconv.ParseInt(expireTime, 10, 64)
 	if err != nil {
@@ -138,7 +145,7 @@ func saveUserData(c *gin.Context) {
 	}
 
 	expiresTimeObj := time.Unix(intExpireTime, 0).UTC()
-	_, err = pool.Exec(ctx, justeat.InsertUser, auth, expiresTimeObj, refreshToken, acr, deviceModel)
+	_, err = pool.Exec(ctx, justeat.InsertUser, auth, expiresTimeObj, refreshToken, acr, deviceModel, email, strconv.Itoa(int(wiiNo.GetHollywoodID())))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
