@@ -137,7 +137,7 @@ func saveUserData(c *gin.Context) {
 		return
 	}
 
-	expiresTimeObj := time.Unix(intExpireTime, 0).Unix()
+	expiresTimeObj := time.Unix(intExpireTime, 0).UTC()
 	_, err = pool.Exec(ctx, justeat.InsertUser, auth, expiresTimeObj, refreshToken, acr, deviceModel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
