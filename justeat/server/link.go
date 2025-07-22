@@ -111,7 +111,7 @@ func get2FAData(c *gin.Context) {
 func saveUserData(c *gin.Context) {
 	// First verify the Wii is linked to this account.
 	wiis, _ := c.Get("wiis")
-	wiiNoStr := c.PostForm("wii_no")
+	wiiNoStr := c.PostForm("wii_number")
 
 	if !slices.Contains(wiis.([]string), wiiNoStr) {
 		c.JSON(http.StatusBadRequest, gin.H{
