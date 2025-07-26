@@ -298,6 +298,12 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 		return nil, err
 	}
 
+	// Get possible item modifiers
+	modifiers, err := j.getItemsDetails(rest)
+	if err != nil {
+		return nil, err
+	}
+
 	var retItems []demae.NestedItem
 	a := 0
 	for _, _item := range items.Items {
@@ -311,20 +317,52 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 			}
 
 			// Determine other variations of this item
+			// TODO: Deals
 			var variations []demae.ItemSize
-			for i, variation := range _item.Variations {
-				name := variation.Name
-				if name == "" {
-					name = _item.Name
-				}
+			if _item.Type == "deal" {
+				// An item can be considered a "deal". We are required to select an item from the deal groups
+				// before proceeding as the deal which we select impacts all modifiers.
+				// We are guaranteed one "variation" as well as one "DealGroupId"
+				variation := _item.Variations[0]
+				for _, group := range modifiers.DealGroups {
+					if slices.Contains(variation.DealGroupsIds, group.Id) {
+						// We can use this deal.
+						for i, itemVariation := range group.DealItemVariations {
+							// We have to look up the variation in the items list.
+							idx := slices.IndexFunc(items.Items, func(i Item) bool {
+								return i.Id == itemVariation.DealItemVariationId
+							})
 
-				variations = append(variations, demae.ItemSize{
-					XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-					ItemCode:  demae.CDATA{Value: variation.Id},
-					Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
-					Price:     demae.CDATA{Value: variation.BasePrice},
-					IsSoldout: demae.CDATA{Value: 0},
-				})
+							curItemVar := items.Items[idx]
+							variations = append(variations, demae.ItemSize{
+								XMLName: xml.Name{Local: fmt.Sprintf("item%d", i)},
+								// Demae does not give us the parent item ID even though we have to supply it.
+								// We also need the Deal ID for when we add to basket.
+								// Therefore, we use this format for the item code:
+								// dealID|itemID|modifierID
+								ItemCode:  demae.CDATA{Value: group.Id + "|" + _item.Id + "|" + curItemVar.Id},
+								Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(curItemVar.Name)},
+								Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
+								IsSoldout: demae.CDATA{Value: 0},
+							})
+						}
+					}
+				}
+			} else {
+				for i, variation := range _item.Variations {
+					name := variation.Name
+					if name == "" {
+						name = _item.Name
+					}
+
+					variations = append(variations, demae.ItemSize{
+						XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
+						ItemCode:  demae.CDATA{Value: variation.Id},
+						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
+						Price:     demae.CDATA{Value: variation.BasePrice},
+						IsSoldout: demae.CDATA{Value: 0},
+					})
+				}
 			}
 
 			retItems = append(retItems, demae.NestedItem{
@@ -391,6 +429,13 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 		return nil, 0, err
 	}
 
+	// Determine if this is a deal product.
+	itemIDs := strings.Split(itemCode, "|")
+	if len(itemIDs) == 3 {
+		// We need the modifier code.
+		itemCode = itemIDs[2]
+	}
+
 	var variation Variation
 	for _, _item := range items.Items {
 		// Find item
@@ -407,20 +452,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 
 	err = resp.Body.Close()
 
-	_url = fmt.Sprintf("%s/%s", j.GlobalAPIURL, rest.ItemDetailsUrl)
-	resp, err = j.httpGet(_url)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	defer resp.Body.Close()
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var modifiers Modifiers
-	err = json.Unmarshal(body, &modifiers)
+	modifiers, err := j.getItemsDetails(rest)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -465,4 +497,26 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	}
 
 	return itemModifiers, variation.BasePrice, nil
+}
+
+func (j *JEClient) getItemsDetails(rest Restaurant) (*Modifiers, error) {
+	_url := fmt.Sprintf("%s/%s", j.GlobalAPIURL, rest.ItemDetailsUrl)
+	resp, err := j.httpGet(_url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var modifiers Modifiers
+	err = json.Unmarshal(body, &modifiers)
+	if err != nil {
+		return nil, err
+	}
+
+	return &modifiers, nil
 }

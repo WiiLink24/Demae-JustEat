@@ -38,15 +38,7 @@ func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
 	return menu.MenuGroupId, nil
 }
 
-func formProduct(r *http.Request) (*Product, error) {
-	itemCode := r.PostForm.Get("itemCode")
-	quantityStr := r.PostForm.Get("quantity")
-
-	quantity, err := strconv.Atoi(quantityStr)
-	if err != nil {
-		return nil, err
-	}
-
+func formProduct(r *http.Request, itemCode string, quantity int) (*Product, error) {
 	var modifierGroups []ModifierGroup
 	for items, _ := range r.PostForm {
 		if strings.Contains(items, "option") {
@@ -99,6 +91,40 @@ func formProduct(r *http.Request) (*Product, error) {
 	return &product, nil
 }
 
+func (j *JEClient) formDealProduct(r *http.Request) (*Deal, error) {
+	itemCode := r.PostForm.Get("itemCode")
+	quantityStr := r.PostForm.Get("quantity")
+
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Split itemCode into it's parts.
+	itemCodes := strings.Split(itemCode, "|")
+	dealId := itemCodes[0]
+	itemId := itemCodes[1]
+	modifierId := itemCodes[2]
+
+	product, err := formProduct(r, modifierId, quantity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Deal{
+		Date:           time.Now().UTC().Format("2006-01-02T15:01:05.000Z"),
+		ProductId:      itemId,
+		Quantity:       quantity,
+		ModifierGroups: nil,
+		DealGroups: []DealGroup{
+			{
+				DealGroupId: dealId,
+				Products:    []Product{*product},
+			},
+		},
+	}, nil
+}
+
 func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 	shopCode := r.PostForm.Get("shopCode")
 	c, err := j.GetMenuGroupID(shopCode)
@@ -111,16 +137,38 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	product, err := formProduct(r)
+	itemCode := r.PostForm.Get("itemCode")
+	quantityStr := r.PostForm.Get("quantity")
+
+	quantity, err := strconv.Atoi(quantityStr)
 	if err != nil {
 		return "", err
+	}
+
+	var products []Product
+	var deals []Deal
+	itemCodes := strings.Split(itemCode, "|")
+	if len(itemCodes) == 3 {
+		deal, err := j.formDealProduct(r)
+		if err != nil {
+			return "", err
+		}
+
+		deals = append(deals, *deal)
+	} else {
+		product, err := formProduct(r, itemCode, quantity)
+		if err != nil {
+			return "", err
+		}
+
+		products = append(products, *product)
 	}
 
 	basket := Basket{
 		RestaurantSEOName: shopCode,
 		MenuGroupId:       c,
 		ServiceType:       "delivery",
-		Products:          []Product{*product},
+		Products:          products,
 		OrderDetails: OrderDetails{
 			Location: Location{
 				ZipCode: j.PostalCode,
@@ -131,7 +179,7 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 			},
 		},
 		Consents:   []any{},
-		Deals:      []any{},
+		Deals:      deals,
 		BasketMode: "None",
 	}
 
@@ -172,7 +220,7 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 			},
 		},
 		Consents:   []any{},
-		Deals:      []any{},
+		Deals:      []Deal{},
 		BasketMode: "None",
 	}
 
@@ -193,19 +241,45 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 }
 
 func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
-	product, err := formProduct(r)
+	itemCode := r.PostForm.Get("itemCode")
+	quantityStr := r.PostForm.Get("quantity")
+
+	quantity, err := strconv.Atoi(quantityStr)
 	if err != nil {
 		return err
 	}
 
+	var products []Product
+	var deals []Deal
+	itemCodes := strings.Split(itemCode, "|")
+	if len(itemCodes) == 3 {
+		deal, err := j.formDealProduct(r)
+		if err != nil {
+			return err
+		}
+
+		deals = append(deals, *deal)
+	} else {
+		product, err := formProduct(r, itemCode, quantity)
+		if err != nil {
+			return err
+		}
+
+		products = append(products, *product)
+	}
+
 	edit := BasketEdit{
 		BasketId: basketId,
-		Product: BasketStatus{
-			Added:   []Product{*product},
+		Product: BasketStatusProduct{
+			Added:   products,
 			Updated: nil,
 			Removed: nil,
 		},
-		Deal: BasketStatus{},
+		Deal: BasketStatusDeal{
+			Added:   deals,
+			Updated: nil,
+			Removed: nil,
+		},
 	}
 
 	_, err = j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
@@ -215,14 +289,14 @@ func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
 func (j *JEClient) RemoveItem(basketId string, productId string, r *http.Request) error {
 	remove := BasketEdit{
 		BasketId: basketId,
-		Product: BasketStatus{
+		Product: BasketStatusProduct{
 			Added:   nil,
 			Updated: nil,
 			Removed: []BasketRemoval{
 				{Date: time.Now().UTC().Format("2006-01-02T15:01:05.000Z"), BasketProductId: productId},
 			},
 		},
-		Deal: BasketStatus{},
+		Deal: BasketStatusDeal{},
 	}
 
 	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), remove)
@@ -287,6 +361,81 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 			}
 
 			modifiers = append(modifiers, group)
+		}
+
+		priceStr := fmt.Sprintf("$%.2f", product.UnitPrice)
+		amountStr := fmt.Sprintf("$%.2f", product.TotalPrice)
+		basketItems = append(basketItems, demae.BasketItem{
+			XMLName:       xml.Name{Local: fmt.Sprintf("container%d", i)},
+			BasketNo:      demae.CDATA{Value: product.ProductId},
+			MenuCode:      demae.CDATA{Value: 1},
+			ItemCode:      demae.CDATA{Value: product.ProductId},
+			Name:          demae.CDATA{Value: demae.RemoveInvalidCharacters(product.Name)},
+			Price:         demae.CDATA{Value: priceStr},
+			Size:          demae.CDATA{Value: ""},
+			IsSoldout:     demae.CDATA{Value: demae.BoolToInt(false)},
+			Quantity:      demae.CDATA{Value: product.Quantity},
+			SubTotalPrice: demae.CDATA{Value: amountStr},
+			Menu: demae.KVFieldWChildren{
+				XMLName: xml.Name{Local: "Menu"},
+				Value: []any{
+					demae.KVField{
+						XMLName: xml.Name{Local: "name"},
+						Value:   "Menu",
+					},
+					demae.KVFieldWChildren{
+						XMLName: xml.Name{Local: "lunchMenuList"},
+						Value: []any{
+							demae.KVField{
+								XMLName: xml.Name{Local: "isLunchTimeMenu"},
+								Value:   demae.BoolToInt(false),
+							},
+							demae.KVField{
+								XMLName: xml.Name{Local: "isOpen"},
+								Value:   demae.BoolToInt(true),
+							},
+						},
+					},
+				},
+			},
+			OptionList: demae.KVFieldWChildren{
+				XMLName: xml.Name{Local: ""},
+				Value:   modifiers,
+			},
+		})
+	}
+
+	// Now we process any deal products.
+	for i, product := range summary.BasketSummary.Deals {
+		var modifiers []any
+		for _, dealGroup := range product.DealGroups {
+			for i, _product := range dealGroup.Products {
+				group := demae.ItemOne{
+					XMLName: xml.Name{Local: fmt.Sprintf("container%d", i)},
+					Info:    demae.CDATA{Value: ""},
+					Code:    demae.CDATA{Value: _product.ProductId},
+					Type:    demae.CDATA{Value: 0},
+					Name:    demae.CDATA{Value: _product.Name},
+					List:    demae.KVFieldWChildren{},
+				}
+
+				for _, modifierGroup := range _product.ModifierGroups {
+					for _, modifier := range modifierGroup.Modifiers {
+						group.List.Value = append(group.List.Value, demae.Item{
+							MenuCode:   demae.CDATA{Value: modifier.ID},
+							ItemCode:   demae.CDATA{Value: modifier.ID},
+							Name:       demae.CDATA{Value: modifier.Name},
+							Price:      demae.CDATA{Value: 0},
+							Info:       demae.CDATA{Value: 0},
+							IsSelected: &demae.CDATA{Value: demae.BoolToInt(true)},
+							Image:      demae.CDATA{Value: 0},
+							IsSoldout:  demae.CDATA{Value: demae.BoolToInt(false)},
+						})
+					}
+				}
+
+				modifiers = append(modifiers, group)
+			}
 		}
 
 		priceStr := fmt.Sprintf("$%.2f", product.UnitPrice)

@@ -100,7 +100,7 @@ type Variation struct {
 	DealOnly          bool        `json:"DealOnly"`
 	MenuGroupIds      []string    `json:"MenuGroupIds"`
 	ModifierGroupsIds []string    `json:"ModifierGroupsIds"`
-	DealGroupsIds     interface{} `json:"DealGroupsIds"`
+	DealGroupsIds     []string    `json:"DealGroupsIds"`
 	NutritionalInfo   interface{} `json:"NutritionalInfo"`
 	NumberOfServings  interface{} `json:"NumberOfServings"`
 }
@@ -159,6 +159,19 @@ type Product struct {
 	RemovedIngredients []any           `json:"removedIngredients"`
 }
 
+type Deal struct {
+	Date           string          `json:"date"`
+	ProductId      string          `json:"productId"`
+	Quantity       int             `json:"quantity"`
+	ModifierGroups []ModifierGroup `json:"modifierGroups"`
+	DealGroups     []DealGroup     `json:"dealGroups"`
+}
+
+type DealGroup struct {
+	DealGroupId string    `json:"dealGroupId"`
+	Products    []Product `json:"products"`
+}
+
 type Location struct {
 	ZipCode     string      `json:"zipCode"`
 	GeoLocation GeoLocation `json:"geoLocation"`
@@ -179,7 +192,7 @@ type Basket struct {
 	ServiceType       string       `json:"serviceType"`
 	Products          []Product    `json:"products"`
 	OrderDetails      OrderDetails `json:"orderDetails"`
-	Deals             []any        `json:"deals"`
+	Deals             []Deal       `json:"deals"`
 	Consents          []any        `json:"consents"`
 	BasketMode        string       `json:"basketMode"`
 }
@@ -204,6 +217,15 @@ type RequestedBasket struct {
 	ModifierGroups []RequestedModifierGroup `json:"ModifierGroups"`
 }
 
+type RequestedDeal struct {
+	DealGroups []RequestedDealGroup `json:"DealGroups"`
+	RequestedBasket
+}
+
+type RequestedDealGroup struct {
+	Products []RequestedBasket `json:"Products"`
+}
+
 type BasketTotals struct {
 	Subtotal float64 `json:"SubTotal"`
 	Total    float64 `json:"Total"`
@@ -220,6 +242,7 @@ type BasketAdjustment struct {
 
 type BasketSummary struct {
 	Products       []RequestedBasket  `json:"Products"`
+	Deals          []RequestedDeal    `json:"Deals"`
 	BasketTotals   BasketTotals       `json:"BasketTotals"`
 	Adjustments    []BasketAdjustment `json:"Adjustments"`
 	DeliveryCharge float64            `json:"DeliveryCharge"`
@@ -230,16 +253,22 @@ type BasketRemoval struct {
 	BasketProductId string `json:"BasketProductId"`
 }
 
-type BasketStatus struct {
+type BasketStatusProduct struct {
 	Added   []Product       `json:"Added"`
 	Updated []Product       `json:"Updated"`
 	Removed []BasketRemoval `json:"Removed"`
 }
 
+type BasketStatusDeal struct {
+	Added   []Deal          `json:"Added"`
+	Updated []Product       `json:"Updated"`
+	Removed []BasketRemoval `json:"Removed"`
+}
+
 type BasketEdit struct {
-	BasketId string       `json:"BasketId"`
-	Product  BasketStatus `json:"Product"`
-	Deal     BasketStatus `json:"Deal"`
+	BasketId string              `json:"BasketId"`
+	Product  BasketStatusProduct `json:"Product"`
+	Deal     BasketStatusDeal    `json:"Deal"`
 }
 
 type Availability struct {
