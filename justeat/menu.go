@@ -68,7 +68,7 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
 	return Menu{}, nil
 }
 
-func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, longRestaurantId string) ([]demae.Item, error) {
+func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]demae.Item, error) {
 	zone, err := j.getLocalizedTimeLocation()
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 			"orderedForTime": time.Now().In(zone).Format("15:04:05"),
 			"serviceType":    "delivery",
 		},
-		"restaurantId": restaurantId,
+		"restaurantId": restaurant.RestaurantId,
 	}
 
 	resp, err := j.httpPost(fmt.Sprintf("%s/recommendations/%s/dishes/menu", j.KongAPIURL, strings.ToLower(string(j.Country))), payload)
@@ -101,7 +101,7 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 		return nil, err
 	}
 
-	resp, err = j.httpGet(fmt.Sprintf("%s/%s", j.GlobalAPIURL, itemsUrl))
+	resp, err = j.httpGet(fmt.Sprintf("%s/%s", j.GlobalAPIURL, restaurant.ItemsUrl))
 	if err != nil {
 		return nil, err
 	}
@@ -118,6 +118,12 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 		return nil, err
 	}
 
+	// Get possible item modifiers
+	modifiers, err := j.getItemsDetails(restaurant)
+	if err != nil {
+		return nil, err
+	}
+
 	var retItems []demae.Item
 	i := 0
 	for _, item := range items.Items {
@@ -129,47 +135,9 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
 				// Download image and process item.
-				if item.ImageSources != nil {
-					j.DownloadFoodImage(item.ImageSources[0].Path, longRestaurantId, item.Id)
-				}
-
-				if item.Description == "" {
-					item.Description = "No description"
-				}
-
-				// Determine other variations of this item
-				var variations []demae.ItemSize
-				for i, variation := range item.Variations {
-					name := variation.Name
-					if name == "" {
-						name = item.Name
-					}
-
-					variations = append(variations, demae.ItemSize{
-						XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-						ItemCode:  demae.CDATA{Value: variation.Id},
-						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
-						Price:     demae.CDATA{Value: variation.BasePrice},
-						IsSoldout: demae.CDATA{Value: 0},
-					})
-				}
-
-				retItems = append(retItems, demae.Item{
-					XMLName:    xml.Name{Local: fmt.Sprintf("container%d", i)},
-					MenuCode:   demae.CDATA{Value: 0},
-					ItemCode:   demae.CDATA{Value: item.Id},
-					Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
-					Price:      demae.CDATA{Value: 0},
-					Info:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Description)},
-					Size:       nil,
-					IsSelected: nil,
-					Image:      demae.CDATA{Value: item.Id},
-					IsSoldout:  demae.CDATA{Value: 0},
-					SizeList: &demae.KVFieldWChildren{
-						XMLName: xml.Name{Local: "sizeList"},
-						Value:   []any{variations[:]},
-					},
-				})
+				retItem := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i).Item
+				retItem.XMLName = xml.Name{Local: fmt.Sprintf("container%d", i)}
+				retItems = append(retItems, retItem)
 				i++
 				break
 			}
@@ -305,91 +273,94 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	}
 
 	var retItems []demae.NestedItem
-	a := 0
+	i := 0
 	for _, _item := range items.Items {
 		if slices.Contains(category.ItemIds, _item.Id) {
-			if len(_item.ImageSources) != 0 {
-				j.DownloadFoodImage(_item.ImageSources[0].Path, shopID, _item.Id)
-			}
-
-			if _item.Description == "" {
-				_item.Description = "No description"
-			}
-
-			// Determine other variations of this item
-			// TODO: Deals
-			var variations []demae.ItemSize
-			if _item.Type == "deal" {
-				// An item can be considered a "deal". We are required to select an item from the deal groups
-				// before proceeding as the deal which we select impacts all modifiers.
-				// We are guaranteed one "variation" as well as one "DealGroupId"
-				variation := _item.Variations[0]
-				for _, group := range modifiers.DealGroups {
-					if slices.Contains(variation.DealGroupsIds, group.Id) {
-						// We can use this deal.
-						for i, itemVariation := range group.DealItemVariations {
-							// We have to look up the variation in the items list.
-							idx := slices.IndexFunc(items.Items, func(i Item) bool {
-								return i.Id == itemVariation.DealItemVariationId
-							})
-
-							curItemVar := items.Items[idx]
-							variations = append(variations, demae.ItemSize{
-								XMLName: xml.Name{Local: fmt.Sprintf("item%d", i)},
-								// Demae does not give us the parent item ID even though we have to supply it.
-								// We also need the Deal ID for when we add to basket.
-								// Therefore, we use this format for the item code:
-								// dealID|itemID|modifierID
-								ItemCode:  demae.CDATA{Value: group.Id + "|" + _item.Id + "|" + curItemVar.Id},
-								Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(curItemVar.Name)},
-								Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
-								IsSoldout: demae.CDATA{Value: 0},
-							})
-						}
-					}
-				}
-			} else {
-				for i, variation := range _item.Variations {
-					name := variation.Name
-					if name == "" {
-						name = _item.Name
-					}
-
-					variations = append(variations, demae.ItemSize{
-						XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-						ItemCode:  demae.CDATA{Value: variation.Id},
-						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
-						Price:     demae.CDATA{Value: variation.BasePrice},
-						IsSoldout: demae.CDATA{Value: 0},
-					})
-				}
-			}
-
-			retItems = append(retItems, demae.NestedItem{
-				XMLName: xml.Name{Local: fmt.Sprintf("container%d", a)},
-				Name:    demae.CDATA{Value: demae.RemoveInvalidCharacters(_item.Name)},
-				Item: demae.Item{
-					XMLName:    xml.Name{Local: "item"},
-					MenuCode:   demae.CDATA{Value: categoryID},
-					ItemCode:   demae.CDATA{Value: _item.Id},
-					Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(_item.Name)},
-					Price:      demae.CDATA{Value: 0},
-					Info:       demae.CDATA{Value: ""}, // demae.RemoveInvalidCharacters(_item.Description)
-					Size:       nil,
-					IsSelected: nil,
-					Image:      demae.CDATA{Value: _item.Id},
-					IsSoldout:  demae.CDATA{Value: 0},
-					SizeList: &demae.KVFieldWChildren{
-						XMLName: xml.Name{Local: "sizeList"},
-						Value:   []any{variations[:]},
-					},
-				},
-			})
-			a++
+			retItems = append(retItems, j.getItem(_item, shopID, categoryID, modifiers, items, i))
+			i++
 		}
 	}
 
 	return retItems, nil
+}
+
+func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int) demae.NestedItem {
+	if len(item.ImageSources) != 0 {
+		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, item.Id)
+	}
+
+	if item.Description == "" {
+		item.Description = "No description"
+	}
+
+	// Determine other variations of this item
+	var variations []demae.ItemSize
+	if item.Type == "deal" {
+		// An item can be considered a "deal". We are required to select an item from the deal groups
+		// before proceeding as the deal which we select impacts all modifiers.
+		// We are guaranteed one "variation" as well as one "DealGroupId"
+		variation := item.Variations[0]
+		for _, group := range modifiers.DealGroups {
+			if slices.Contains(variation.DealGroupsIds, group.Id) {
+				// We can use this deal.
+				for i, itemVariation := range group.DealItemVariations {
+					// We have to look up the variation in the items list.
+					idx := slices.IndexFunc(items.Items, func(i Item) bool {
+						return i.Id == itemVariation.DealItemVariationId
+					})
+
+					curItemVar := items.Items[idx]
+					variations = append(variations, demae.ItemSize{
+						XMLName: xml.Name{Local: fmt.Sprintf("item%d", i)},
+						// Demae does not give us the parent item ID even though we have to supply it.
+						// We also need the Deal ID for when we add to basket.
+						// Therefore, we use this format for the item code:
+						// dealID|itemID|modifierID
+						ItemCode:  demae.CDATA{Value: group.Id + "|" + item.Id + "|" + curItemVar.Id},
+						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(curItemVar.Name)},
+						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
+						IsSoldout: demae.CDATA{Value: 0},
+					})
+				}
+			}
+		}
+	} else {
+		for i, variation := range item.Variations {
+			name := variation.Name
+			if name == "" {
+				name = item.Name
+			}
+
+			variations = append(variations, demae.ItemSize{
+				XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
+				ItemCode:  demae.CDATA{Value: variation.Id},
+				Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
+				Price:     demae.CDATA{Value: variation.BasePrice},
+				IsSoldout: demae.CDATA{Value: 0},
+			})
+		}
+	}
+
+	return demae.NestedItem{
+		XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
+		Name:    demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
+		Item: demae.Item{
+			XMLName:    xml.Name{Local: fmt.Sprintf("item%d", idx)},
+			MenuCode:   demae.CDATA{Value: categoryID},
+			ItemCode:   demae.CDATA{Value: item.Id},
+			Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
+			Price:      demae.CDATA{Value: 0},
+			Info:       demae.CDATA{Value: ""}, // demae.RemoveInvalidCharacters(_item.Description)
+			Size:       nil,
+			IsSelected: nil,
+			Image:      demae.CDATA{Value: item.Id},
+			IsSoldout:  demae.CDATA{Value: 0},
+			SizeList: &demae.KVFieldWChildren{
+				XMLName: xml.Name{Local: "sizeList"},
+				Value:   []any{variations[:]},
+			},
+		},
+	}
 }
 
 func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.ItemOne, float64, error) {

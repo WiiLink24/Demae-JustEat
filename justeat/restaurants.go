@@ -245,7 +245,7 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		}
 	}
 
-	recommendations, err := j.GetRecommendedItems(rest.RestaurantId, rest.ItemsUrl, id)
+	recommendations, err := j.GetRecommendedItems(id, rest)
 	if err != nil {
 		return nil, err
 	}
