@@ -21,6 +21,9 @@ type Menu struct {
 			FromLocalTime string `json:"FromLocalTime"`
 			ToLocalTime   string `json:"ToLocalTime"`
 		} `json:"Times"`
+		OrderTimeSchedule []struct {
+			LowerBound float64 `json:"LowerBound"`
+		} `json:"OrderTimeSchedule"`
 		BaseWorkingTimeMinutes int `json:"BaseWorkingTimeMinutes"`
 	} `json:"Schedules"`
 	Categories           []Category `json:"Categories"`

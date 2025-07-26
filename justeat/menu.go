@@ -21,10 +21,11 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
 	// Different menus can be available at different times on the same day.
 	// For example, Seven Sisters KFC in London has a Lunch Menu which runs from 10 AM to 2:59 PM.
 	// We have to iterate over every schedule in every menu until we find the appropriate menu.
-	t := time.Now().In(zone)
+	currentTime := time.Now().In(zone)
 
-	// As the API gives us only the time and not absolute date, we have to default to Go's default time of 0000-01-01
-	t = time.Date(0, 1, 1, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), zone)
+	// As the API gives us only the time and not absolute date, when we call time.Parse in the loop, it will return a time object of 0000-01-01 with the scheduled times.
+	// Therefore, we require two time objects to compare with the scheduled times. One with the correct day of the week, and a second with the date of 0000-01-01 and current time.
+	t := time.Date(0, 1, 1, currentTime.Hour(), currentTime.Minute(), currentTime.Second(), currentTime.Nanosecond(), zone)
 	for _, menu := range menus {
 		// Skip non delivery menus
 		hasDelivery := false
@@ -39,26 +40,27 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
 		}
 
 		for _, schedule := range menu.Schedules {
-			if t.Weekday().String() != schedule.DayOfWeek {
+			if currentTime.Weekday().String() != schedule.DayOfWeek {
 				// Not the current day, skip
 				continue
 			}
 
-			// TODO: Index 0 might be bad lmao
-			start, err := time.Parse("15:04:05", schedule.Times[0].FromLocalTime)
-			if err != nil {
-				return Menu{}, err
-			}
+			for _, timeStruct := range schedule.Times {
+				start, err := time.Parse("15:04:05", timeStruct.FromLocalTime)
+				if err != nil {
+					return Menu{}, err
+				}
 
-			end, err := time.Parse("15:04:05", schedule.Times[0].ToLocalTime)
-			if err != nil {
-				return Menu{}, err
-			}
+				end, err := time.Parse("15:04:05", timeStruct.ToLocalTime)
+				if err != nil {
+					return Menu{}, err
+				}
 
-			// We found the menu if it is the current day of the week, and the current time is not before or after the
-			// start and end times.
-			if !t.Before(start) && !t.After(end) {
-				return menu, nil
+				// We found the menu if it is the current day of the week, and the current time is not before or after the
+				// start and end times.
+				if !t.Before(start) && !t.After(end) {
+					return menu, nil
+				}
 			}
 		}
 	}
@@ -126,8 +128,10 @@ func (j *JEClient) GetRecommendedItems(restaurantId string, itemsUrl string, lon
 
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
-				// Do the thing
-				j.DownloadFoodImage(item.ImageSources[0].Path, longRestaurantId, item.Id)
+				// Download image and process item.
+				if item.ImageSources != nil {
+					j.DownloadFoodImage(item.ImageSources[0].Path, longRestaurantId, item.Id)
+				}
 
 				if item.Description == "" {
 					item.Description = "No description"

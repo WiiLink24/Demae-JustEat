@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (j *JEClient) GetBareRestaurants() (c []demae.CategoryCode, e error) {
@@ -138,7 +139,7 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 			MinPrice:    demae.CDATA{Value: restaurant.(map[string]any)["minimumDeliveryValue"]},
 			Yoyaku:      demae.CDATA{Value: 1},
 			Activate:    demae.CDATA{Value: "on"},
-			WaitTime:    demae.CDATA{Value: 1}, //restaurant.(map[string]any)["availability"].(map[string]any)["delivery"].(map[string]any)["etaMinutes"].(map[string]any)["rangeLower"]}}
+			WaitTime:    demae.CDATA{Value: restaurant.(map[string]any)["availability"].(map[string]any)["delivery"].(map[string]any)["etaMinutes"].(map[string]any)["rangeLower"]},
 			PaymentList: demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "paymentList"},
 				Value: []any{
@@ -167,7 +168,6 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 		numOfRestaurants++
 	}
 
-	fmt.Println(len(restaurants))
 	return restaurants, nil
 }
 
@@ -193,32 +193,47 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		activate = "off"
 	}
 
-	// TODO: Times
-	var times []demae.KVFieldWChildren
-
-	k := demae.KVFieldWChildren{
-		XMLName: xml.Name{Local: fmt.Sprintf("values%d", 0)},
-		Value: []any{
-			demae.KVField{
-				XMLName: xml.Name{Local: "start"},
-				Value:   "00:00:00",
-			},
-			demae.KVField{
-				XMLName: xml.Name{Local: "end"},
-				Value:   "24:00:00",
-			},
-			demae.KVField{
-				XMLName: xml.Name{Local: "holiday"},
-				Value:   "n",
-			},
-		},
-	}
-
-	times = append(times, k)
-
 	menu, err := j.getCorrectMenu(rest.Menus)
 	if err != nil {
 		return nil, err
+	}
+
+	// With the correct menu, we can pull the times that the restaurant is open.
+	zone, err := j.getLocalizedTimeLocation()
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.Now().In(zone)
+	var times []demae.KVFieldWChildren
+	var waitingTime int
+	for _, schedule := range menu.Schedules {
+		if schedule.DayOfWeek != t.Weekday().String() {
+			continue
+		}
+
+		// Correct day, get operating times.
+		waitingTime = int(schedule.OrderTimeSchedule[0].LowerBound)
+
+		for i, timeStruct := range schedule.Times {
+			times = append(times, demae.KVFieldWChildren{
+				XMLName: xml.Name{Local: fmt.Sprintf("values%d", i)},
+				Value: []any{
+					demae.KVField{
+						XMLName: xml.Name{Local: "start"},
+						Value:   timeStruct.FromLocalTime,
+					},
+					demae.KVField{
+						XMLName: xml.Name{Local: "end"},
+						Value:   timeStruct.ToLocalTime,
+					},
+					demae.KVField{
+						XMLName: xml.Name{Local: "holiday"},
+						Value:   "n",
+					},
+				},
+			})
+		}
 	}
 
 	var orderTimes []demae.KVFieldWChildren
@@ -243,7 +258,7 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		Amenity:       demae.CDATA{Value: "None for now"},
 		MenuListCode:  demae.CDATA{Value: 1},
 		Activate:      demae.CDATA{Value: activate},
-		WaitTime:      demae.CDATA{Value: 10},
+		WaitTime:      demae.CDATA{Value: waitingTime},
 		TimeOrder:     demae.CDATA{Value: "y"},
 		Tel:           demae.CDATA{Value: "4168377643"},
 		YoyakuMinDate: demae.CDATA{Value: 1},
@@ -257,7 +272,6 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 				},
 			},
 		},
-		// TODO: Proper schedule based on time zone
 		ShopStatus: demae.ShopStatus{
 			Hours: demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "hours"},
