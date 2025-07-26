@@ -14,15 +14,17 @@ import (
 func documentTemplate(r *Response) {
 	r.AddKVWChildNode("container0", demae.KVField{
 		XMLName: xml.Name{Local: "contents"},
-		Value:   "hello",
+		Value:   "TODO: Privacy Policy and Terms of Service",
 	})
 	r.AddKVWChildNode("container1", demae.KVField{
 		XMLName: xml.Name{Local: "contents"},
-		Value:   "Among Us",
+		// Delivery success
+		Value: "Enjoy your food!",
 	})
 	r.AddKVWChildNode("container2", demae.KVField{
 		XMLName: xml.Name{Local: "contents"},
-		Value:   "Among Us",
+		// Delivery failure
+		Value: "Contact WiiLink Support with your Wii Number",
 	})
 }
 
@@ -40,37 +42,6 @@ func categoryList(r *Response) {
 	}
 
 	r.MakeCategoryXMLs(categories)
-
-	/*shops := demae.KVFieldWChildren{
-		XMLName: xml.Name{Local: "Pizza"},
-		Value: []any{
-			demae.KVField{
-				XMLName: xml.Name{Local: "LargeCategoryName"},
-				Value:   "Meal",
-			},
-			demae.KVFieldWChildren{
-				XMLName: xml.Name{Local: "CategoryList"},
-				Value: []any{
-					demae.KVFieldWChildren{
-						XMLName: xml.Name{Local: "TestingCategory"},
-						Value: []any{
-							demae.KVField{
-								XMLName: xml.Name{Local: "CategoryCode"},
-								Value:   "01",
-							},
-							demae.KVFieldWChildren{
-								XMLName: xml.Name{Local: "ShopList"},
-								Value: []any{
-									restaurants,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}*/
-
 	placeholder := demae.KVFieldWChildren{
 		XMLName: xml.Name{Local: "Placeholder"},
 		Value: []any{
@@ -132,8 +103,6 @@ func categoryList(r *Response) {
 			},
 		},
 	}
-
-	// r.AddCustomType(shops)
 
 	// It there is no nearby stores, we do not add the placeholder. This will tell the user there are no stores.
 	if categories != nil && r.request.URL.Query().Get("action") != "webApi_shop_list" {
