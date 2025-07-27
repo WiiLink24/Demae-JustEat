@@ -124,6 +124,11 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		return nil, err
 	}
 
+	soldOutItems, err := j.getSoldOutItems(restaurant)
+	if err != nil {
+		return nil, err
+	}
+
 	var retItems []demae.Item
 	i := 0
 	for _, item := range items.Items {
@@ -135,7 +140,12 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
 				// Download image and process item.
-				retItem := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i).Item
+				itemObj := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i, soldOutItems)
+				if itemObj == nil {
+					continue
+				}
+
+				retItem := itemObj.Item
 				retItem.XMLName = xml.Name{Local: fmt.Sprintf("container%d", i)}
 				retItems = append(retItems, retItem)
 				i++
@@ -272,11 +282,21 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 		return nil, err
 	}
 
+	soldOutItems, err := j.getSoldOutItems(rest)
+	if err != nil {
+		return nil, err
+	}
+
 	var retItems []demae.NestedItem
 	i := 0
 	for _, _item := range items.Items {
 		if slices.Contains(category.ItemIds, _item.Id) {
-			retItems = append(retItems, j.getItem(_item, shopID, categoryID, modifiers, items, i))
+			itemObj := j.getItem(_item, shopID, categoryID, modifiers, items, i, soldOutItems)
+			if itemObj == nil {
+				continue
+			}
+
+			retItems = append(retItems, *itemObj)
 			i++
 		}
 	}
@@ -284,7 +304,7 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	return retItems, nil
 }
 
-func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int) demae.NestedItem {
+func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string) *demae.NestedItem {
 	if len(item.ImageSources) != 0 {
 		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, item.Id)
 	}
@@ -309,6 +329,10 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						return i.Id == itemVariation.DealItemVariationId
 					})
 
+					if idx == -1 {
+						continue
+					}
+
 					curItemVar := items.Items[idx]
 					variations = append(variations, demae.ItemSize{
 						XMLName: xml.Name{Local: fmt.Sprintf("item%d", i)},
@@ -319,7 +343,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						ItemCode:  demae.CDATA{Value: group.Id + "|" + item.Id + "|" + curItemVar.Id},
 						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(curItemVar.Name)},
 						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
-						IsSoldout: demae.CDATA{Value: 0},
+						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id))},
 					})
 				}
 			}
@@ -336,16 +360,20 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 				ItemCode:  demae.CDATA{Value: variation.Id},
 				Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
 				Price:     demae.CDATA{Value: variation.BasePrice},
-				IsSoldout: demae.CDATA{Value: 0},
+				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id))},
 			})
 		}
 	}
 
-	return demae.NestedItem{
+	if len(variations) == 0 {
+		return nil
+	}
+
+	return &demae.NestedItem{
 		XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
 		Name:    demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
 		Item: demae.Item{
-			XMLName:    xml.Name{Local: fmt.Sprintf("item%d", idx)},
+			XMLName:    xml.Name{Local: "item"},
 			MenuCode:   demae.CDATA{Value: categoryID},
 			ItemCode:   demae.CDATA{Value: item.Id},
 			Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
@@ -354,7 +382,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			Size:       nil,
 			IsSelected: nil,
 			Image:      demae.CDATA{Value: item.Id},
-			IsSoldout:  demae.CDATA{Value: 0},
+			IsSoldout:  demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, item.Id))},
 			SizeList: &demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "sizeList"},
 				Value:   []any{variations[:]},
@@ -490,4 +518,30 @@ func (j *JEClient) getItemsDetails(rest Restaurant) (*Modifiers, error) {
 	}
 
 	return &modifiers, nil
+}
+
+func (j *JEClient) getSoldOutItems(rest Restaurant) ([]string, error) {
+	// Get sold out items.
+	_url := fmt.Sprintf("%s/restaurant/%s/%s/menu/dynamic", j.KongAPIURL, strings.ToLower(string(j.Country)), rest.RestaurantId)
+	resp, err := j.httpGet(_url)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var restaurantSummary map[string]any
+	err = json.Unmarshal(body, &restaurantSummary)
+	if err != nil {
+		return nil, err
+	}
+
+	var offlineItems []string
+	for _, a := range restaurantSummary["OfflineVariationIds"].([]any) {
+		offlineItems = append(offlineItems, a.(string))
+	}
+	return offlineItems, nil
 }
