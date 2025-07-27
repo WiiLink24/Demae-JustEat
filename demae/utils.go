@@ -62,5 +62,20 @@ func RandIntWRange(min, max int) int {
 }
 
 func Wordwrap(text string, width uint, maxLines int) string {
-	return wordwrap.WrapString(text, width)
+	wrapped := wordwrap.WrapString(text, width)
+	if maxLines == -1 {
+		return wrapped
+	}
+
+	strippedWrapped := ""
+	for i, s := range strings.Split(wrapped, "\n") {
+		if i == maxLines {
+			break
+		}
+
+		strippedWrapped += s + "\n"
+	}
+
+	// Remove last newline
+	return strings.TrimRight(strippedWrapped, "\n")
 }

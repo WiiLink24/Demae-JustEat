@@ -10,7 +10,13 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+)
+
+var (
+	dealsMap  = map[string]string{}
+	dealsLock = &sync.Mutex{}
 )
 
 func (j *JEClient) GetBareRestaurants() (c []demae.CategoryCode, e error) {
@@ -127,16 +133,36 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 			break
 		}
 
+		// Store minimum delivery price in the cache.
+		shopCode := restaurant.(map[string]any)["uniqueName"].(string)
+		minDeliveryPrice := restaurant.(map[string]any)["minimumDeliveryValue"].(float64)
+
 		// Download image
 		imgUrl := restaurant.(map[string]any)["logoUrl"].(string)
 		j.DownloadLogo(imgUrl, restaurant.(map[string]any)["uniqueName"].(string))
 
+		// Get any available offers
+		dealsStr := ""
+		for _, deals := range restaurant.(map[string]any)["deals"].([]any) {
+			if deals.(map[string]any)["description"].(string) == "" {
+				continue
+			}
+
+			dealsStr += deals.(map[string]any)["description"].(string) + "\n"
+		}
+
+		// Remove last newline and put in map.
+		dealsStr = strings.TrimRight(dealsStr, "\n")
+		dealsLock.Lock()
+		dealsMap[shopCode] = dealsStr
+		dealsLock.Unlock()
+
 		restaurants = append(restaurants, demae.BasicShop{
-			ShopCode:    demae.CDATA{Value: restaurant.(map[string]any)["uniqueName"]},
-			HomeCode:    demae.CDATA{Value: restaurant.(map[string]any)["uniqueName"]},
-			Name:        demae.CDATA{Value: demae.Wordwrap(restaurant.(map[string]any)["name"].(string), 24, 1)},
+			ShopCode:    demae.CDATA{Value: shopCode},
+			HomeCode:    demae.CDATA{Value: shopCode},
+			Name:        demae.CDATA{Value: demae.Wordwrap(restaurant.(map[string]any)["name"].(string), 24, -1)},
 			Catchphrase: demae.CDATA{Value: "None"},
-			MinPrice:    demae.CDATA{Value: restaurant.(map[string]any)["minimumDeliveryValue"]},
+			MinPrice:    demae.CDATA{Value: minDeliveryPrice},
 			Yoyaku:      demae.CDATA{Value: 1},
 			Activate:    demae.CDATA{Value: "on"},
 			WaitTime:    demae.CDATA{Value: restaurant.(map[string]any)["availability"].(map[string]any)["delivery"].(map[string]any)["etaMinutes"].(map[string]any)["rangeLower"]},
@@ -250,17 +276,21 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		return nil, err
 	}
 
+	dealsLock.Lock()
+	deals := dealsMap[id]
+	dealsLock.Unlock()
+
 	return &demae.ShopOne{
 		CategoryCode:  demae.CDATA{Value: "01"},
 		Address:       demae.CDATA{Value: rest.RestaurantInfo.Location.Address},
-		Information:   demae.CDATA{Value: demae.Wordwrap(rest.RestaurantInfo.Description, 24, 1)},
+		Information:   demae.CDATA{Value: demae.Wordwrap(rest.RestaurantInfo.Description, 24, -1)},
 		Attention:     demae.CDATA{Value: "None"},
-		Amenity:       demae.CDATA{Value: "None for now"},
+		Amenity:       demae.CDATA{Value: deals},
 		MenuListCode:  demae.CDATA{Value: 1},
 		Activate:      demae.CDATA{Value: activate},
 		WaitTime:      demae.CDATA{Value: waitingTime},
 		TimeOrder:     demae.CDATA{Value: "y"},
-		Tel:           demae.CDATA{Value: "4168377643"},
+		Tel:           demae.CDATA{Value: "None"},
 		YoyakuMinDate: demae.CDATA{Value: 1},
 		YoyakuMaxDate: demae.CDATA{Value: 30},
 		PaymentList: demae.KVFieldWChildren{
