@@ -1,0 +1,25 @@
+<Config>
+    <DemaeAddress>0.0.0.0:80</DemaeAddress>
+    <JustEatAddress>0.0.0.0:8080</JustEatAddress>
+
+    <!-- Database configuration -->
+    <SQLAddress></SQLAddress>
+    <SQLUser></SQLUser>
+    <SQLPass></SQLPass>
+    <SQLDB></SQLDB>
+
+    <!-- Discord Webhook -->
+    <ErrorWebhook></ErrorWebhook>
+    <OrderWebhook></OrderWebhook>
+
+    <!-- External APIs -->
+    <SentryDSN></SentryDSN>
+
+    <oidc>
+        <clientID></clientID>
+        <clientSecret></clientSecret>
+        <redirectURL></redirectURL>
+        <scopes>openid profile email</scopes>
+        <provider></provider>
+    </oidc>
+</Config>
