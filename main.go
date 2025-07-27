@@ -8,6 +8,8 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/justeat/server"
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/remizovm/geonames"
+	"github.com/remizovm/geonames/models"
 	"log"
 	"net/http"
 	"os"
@@ -17,9 +19,11 @@ import (
 )
 
 var (
-	pool   *pgxpool.Pool
-	ctx    = context.Background()
-	config *demae.Config
+	pool          *pgxpool.Pool
+	ctx           = context.Background()
+	config        *demae.Config
+	geonameCities map[int]*models.Feature
+	geonameStates []*models.AdminCode
 )
 
 func checkError(err error) {
@@ -56,12 +60,20 @@ func main() {
 	// Ensure this Postgresql connection is valid.
 	defer pool.Close()
 
+	// Initialize Geonames.
+	client := geonames.Client{}
+	geonameCities, err = client.Cities15000()
+	checkError(err)
+
+	geonameStates, err = client.Admin1CodesASCII()
+	checkError(err)
+
 	fmt.Printf("Starting HTTP connection (%s)...\nNot using the usual port for HTTP?\nBe sure to use a proxy, otherwise the Wii can't connect!\n", config.DemaeAddress)
 	r := NewRoute()
 	nwapi := r.HandleGroup("nwapi.php")
 	{
 		nwapi.NormalResponse("webApi_document_template", documentTemplate)
-		// nwapi.NormalResponse("webApi_area_list", areaList)
+		nwapi.NormalResponse("webApi_area_list", areaList)
 		nwapi.MultipleRootNodes("webApi_category_list", categoryList)
 		nwapi.NormalResponse("webApi_area_shopinfo", func(r *Response) {})
 		nwapi.NormalResponse("webApi_shop_list", shopList)
