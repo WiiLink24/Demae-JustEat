@@ -120,7 +120,6 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			Asap: times["asapAvailable"].(bool),
 			Scheduled: CheckoutTime{
 				// The first available time
-				// TODO: Scheduled times!!!!
 				TimeFrom: times["times"].([]any)[0].(map[string]any)["from"].(string),
 				TimeTo:   times["times"].([]any)[0].(map[string]any)["to"].(string),
 			},
