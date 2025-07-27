@@ -485,14 +485,25 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		Value:   summary.BasketSummary.BasketTotals.Subtotal,
 	}
 
+	// Demae rounds anything less than 1 to 0. Round up to avoid this.
+	deliveryCharge := summary.BasketSummary.DeliveryCharge
+	if deliveryCharge < 1 {
+		deliveryCharge = 1
+	}
+
 	chargePrice := demae.KVField{
 		XMLName: xml.Name{Local: "chargePrice"},
-		Value:   summary.BasketSummary.BasketTotals.Subtotal,
+		Value:   deliveryCharge,
 	}
 
 	totalPrice := demae.KVField{
 		XMLName: xml.Name{Local: "totalPrice"},
 		Value:   summary.BasketSummary.BasketTotals.Total,
+	}
+
+	discountPrice := demae.KVField{
+		XMLName: xml.Name{Local: "discountPrice"},
+		Value:   summary.BasketSummary.TotalDiscount,
 	}
 
 	cart := demae.KVFieldWChildren{
@@ -521,6 +532,7 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		basketPrice,
 		chargePrice,
 		totalPrice,
+		discountPrice,
 		status,
 		cart,
 	}, nil

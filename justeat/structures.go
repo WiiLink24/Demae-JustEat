@@ -246,6 +246,7 @@ type BasketSummary struct {
 	BasketTotals   BasketTotals       `json:"BasketTotals"`
 	Adjustments    []BasketAdjustment `json:"Adjustments"`
 	DeliveryCharge float64            `json:"DeliveryCharge"`
+	TotalDiscount  float64            `json:"TotalDiscount"`
 }
 
 type BasketRemoval struct {

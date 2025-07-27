@@ -341,7 +341,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						// Therefore, we use this format for the item code:
 						// dealID|itemID|modifierID
 						ItemCode:  demae.CDATA{Value: group.Id + "|" + item.Id + "|" + curItemVar.Id},
-						Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(curItemVar.Name)},
+						Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(curItemVar.Name), 21, 2)},
 						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
 						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id))},
 					})
@@ -358,7 +358,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			variations = append(variations, demae.ItemSize{
 				XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
 				ItemCode:  demae.CDATA{Value: variation.Id},
-				Size:      demae.CDATA{Value: demae.RemoveInvalidCharacters(name)},
+				Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(name), 21, 2)},
 				Price:     demae.CDATA{Value: variation.BasePrice},
 				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id))},
 			})
@@ -371,12 +371,12 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 
 	return &demae.NestedItem{
 		XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
-		Name:    demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
+		Name:    demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), 26, -1)},
 		Item: demae.Item{
 			XMLName:    xml.Name{Local: "item"},
 			MenuCode:   demae.CDATA{Value: categoryID},
 			ItemCode:   demae.CDATA{Value: item.Id},
-			Name:       demae.CDATA{Value: demae.RemoveInvalidCharacters(item.Name)},
+			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), 26, -1)},
 			Price:      demae.CDATA{Value: 0},
 			Info:       demae.CDATA{Value: ""}, // demae.RemoveInvalidCharacters(_item.Description)
 			Size:       nil,
