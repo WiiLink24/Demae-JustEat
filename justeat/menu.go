@@ -383,7 +383,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			ItemCode:   demae.CDATA{Value: item.Id},
 			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), nameWrapLen, -1)},
 			Price:      demae.CDATA{Value: 0},
-			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 4)},
+			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 3)},
 			Size:       nil,
 			IsSelected: nil,
 			Image:      demae.CDATA{Value: item.Id},
