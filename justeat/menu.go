@@ -196,7 +196,7 @@ func (j *JEClient) GetMenuCategories(id string) ([]demae.Menu, error) {
 			LinkTitle:   demae.CDATA{Value: demae.Wordwrap(category.Name, 25, 2)},
 			EnabledLink: demae.CDATA{Value: 1},
 			Name:        demae.CDATA{Value: category.Name},
-			Info:        demae.CDATA{Value: category.Description},
+			Info:        demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(category.Description), 50, 2)},
 			SetNum:      demae.CDATA{Value: 1},
 			LunchMenuList: struct {
 				IsLunchTimeMenu demae.CDATA `xml:"isLunchTimeMenu"`
@@ -383,7 +383,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			ItemCode:   demae.CDATA{Value: item.Id},
 			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), nameWrapLen, -1)},
 			Price:      demae.CDATA{Value: 0},
-			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 39, 3)},
+			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 4)},
 			Size:       nil,
 			IsSelected: nil,
 			Image:      demae.CDATA{Value: item.Id},
