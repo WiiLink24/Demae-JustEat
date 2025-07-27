@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+const (
+	RecommendedNameLength = 16
+	NormalNameLength      = 26
+)
+
 func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
 	// The menu is based on the current date and time.
 	zone, err := j.getLocalizedTimeLocation()
@@ -140,7 +145,7 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
 				// Download image and process item.
-				itemObj := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i, soldOutItems)
+				itemObj := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i, soldOutItems, RecommendedNameLength)
 				if itemObj == nil {
 					continue
 				}
@@ -188,10 +193,10 @@ func (j *JEClient) GetMenuCategories(id string) ([]demae.Menu, error) {
 		menus = append(menus, demae.Menu{
 			XMLName:     xml.Name{Local: fmt.Sprintf("container_%d", i)},
 			MenuCode:    demae.CDATA{Value: category.Id},
-			LinkTitle:   demae.CDATA{Value: category.Name},
+			LinkTitle:   demae.CDATA{Value: demae.Wordwrap(category.Name, 25, 2)},
 			EnabledLink: demae.CDATA{Value: 1},
 			Name:        demae.CDATA{Value: category.Name},
-			Info:        demae.CDATA{Value: ""}, // category.Description
+			Info:        demae.CDATA{Value: category.Description},
 			SetNum:      demae.CDATA{Value: 1},
 			LunchMenuList: struct {
 				IsLunchTimeMenu demae.CDATA `xml:"isLunchTimeMenu"`
@@ -291,7 +296,7 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	i := 0
 	for _, _item := range items.Items {
 		if slices.Contains(category.ItemIds, _item.Id) {
-			itemObj := j.getItem(_item, shopID, categoryID, modifiers, items, i, soldOutItems)
+			itemObj := j.getItem(_item, shopID, categoryID, modifiers, items, i, soldOutItems, NormalNameLength)
 			if itemObj == nil {
 				continue
 			}
@@ -304,7 +309,7 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	return retItems, nil
 }
 
-func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string) *demae.NestedItem {
+func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string, nameWrapLen uint) *demae.NestedItem {
 	if len(item.ImageSources) != 0 {
 		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, item.Id)
 	}
@@ -376,9 +381,9 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			XMLName:    xml.Name{Local: "item"},
 			MenuCode:   demae.CDATA{Value: categoryID},
 			ItemCode:   demae.CDATA{Value: item.Id},
-			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), 26, -1)},
+			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), nameWrapLen, -1)},
 			Price:      demae.CDATA{Value: 0},
-			Info:       demae.CDATA{Value: ""}, // demae.RemoveInvalidCharacters(_item.Description)
+			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 39, 3)},
 			Size:       nil,
 			IsSelected: nil,
 			Image:      demae.CDATA{Value: item.Id},
@@ -480,7 +485,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 					parent.List.Value = append(parent.List.Value, demae.Item{
 						MenuCode:  demae.CDATA{Value: set.Modifier.Id},
 						ItemCode:  demae.CDATA{Value: set.Modifier.Id},
-						Name:      demae.CDATA{Value: set.Modifier.Name},
+						Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
 						Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
 						Info:      demae.CDATA{Value: "None yet"},
 						Size:      nil,
