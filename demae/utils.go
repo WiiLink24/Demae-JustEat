@@ -2,6 +2,7 @@ package demae
 
 import (
 	"github.com/gofrs/uuid"
+	"github.com/mitchellh/go-wordwrap"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -58,4 +59,8 @@ func UUID() string {
 
 func RandIntWRange(min, max int) int {
 	return min + int(rand.Int63n(int64(max-min+1)))
+}
+
+func Wordwrap(text string, width uint, maxLines int) string {
+	return wordwrap.WrapString(text, width)
 }

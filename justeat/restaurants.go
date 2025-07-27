@@ -134,7 +134,7 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 		restaurants = append(restaurants, demae.BasicShop{
 			ShopCode:    demae.CDATA{Value: restaurant.(map[string]any)["uniqueName"]},
 			HomeCode:    demae.CDATA{Value: restaurant.(map[string]any)["uniqueName"]},
-			Name:        demae.CDATA{Value: restaurant.(map[string]any)["name"]},
+			Name:        demae.CDATA{Value: demae.Wordwrap(restaurant.(map[string]any)["name"].(string), 24, 1)},
 			Catchphrase: demae.CDATA{Value: "None"},
 			MinPrice:    demae.CDATA{Value: restaurant.(map[string]any)["minimumDeliveryValue"]},
 			Yoyaku:      demae.CDATA{Value: 1},
@@ -253,8 +253,8 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 	return &demae.ShopOne{
 		CategoryCode:  demae.CDATA{Value: "01"},
 		Address:       demae.CDATA{Value: rest.RestaurantInfo.Location.Address},
-		Information:   demae.CDATA{Value: rest.RestaurantInfo.Description},
-		Attention:     demae.CDATA{Value: "dfg"},
+		Information:   demae.CDATA{Value: demae.Wordwrap(rest.RestaurantInfo.Description, 24, 1)},
+		Attention:     demae.CDATA{Value: "None"},
 		Amenity:       demae.CDATA{Value: "None for now"},
 		MenuListCode:  demae.CDATA{Value: 1},
 		Activate:      demae.CDATA{Value: activate},
@@ -330,7 +330,7 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 				},
 			},
 			Interval: demae.CDATA{Value: 5},
-			Holiday:  demae.CDATA{Value: "No ordering on Canada Day"},
+			Holiday:  demae.CDATA{Value: "No information."},
 		},
 		RecommendedItemList: demae.KVFieldWChildren{
 			Value: []any{
