@@ -228,7 +228,7 @@
         function popup() {
             let button = document.getElementById("payment");
             button.onclick = () => {
-                window.open({{ .URL }});
+                window.open({{ .ActiveOrders }}[0].Braintree.head.paymentResource.redirectUrl);
         }
         }
     </script>
