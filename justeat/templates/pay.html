@@ -208,6 +208,19 @@
                 Finalizing...
             `;
             button.disabled = true;
+
+            const formData = new URLSearchParams();
+            // TODO: Put the actual hollywood id
+            formData.append("hollywood_id", "");
+
+            fetch("/finalize", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: formData
+            })
         }
 
         function cancelOrder() {

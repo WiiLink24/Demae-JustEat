@@ -134,6 +134,7 @@ func finalizePayment(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+
 	// Pseudo-client
 	client := justeat.JEClient{
 		Context:      ctx,
