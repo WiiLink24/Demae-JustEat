@@ -91,6 +91,8 @@
             <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col items-center max-w-md w-full space-y-6">
                     <div class="relative group w-full">
+                        <span class="mb-3 text-white flex opacity-70"><img src="https://accounts.wiilink.ca/assets/icon/info.svg" alt="Info"
+                            class="w-5 h-5 invert mr-2" /> <span class="-translate-y-1">Remember to double check your address information on your Wii, as it is required to dispatch your order.</span></span>
                         {{ if gt (len .ActiveOrders) 1 }}
                         <div
                             class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
@@ -126,14 +128,25 @@
                         {{ else }}
                         <div
                             class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
-                            <div class="flex items-center justify-center mb-6">
+                            <div class="flex items-center justify-start mb-6">
                                 <div class="p-3 bg-blue-600/20 rounded-full text-blue-400">
                                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNyZWRpdC1jYXJkLWljb24gbHVjaWRlLWNyZWRpdC1jYXJkIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHg9IjIiIHk9IjUiIHJ4PSIyIi8+PGxpbmUgeDE9IjIiIHgyPSIyMiIgeTE9IjEwIiB5Mj0iMTAiLz48L3N2Zz4="
                                         alt="Icon" class="w-10 h-10 invert" />
                                 </div>
                             </div>
-                            <div class="text-center mb-8">
+                            <div class="text-left mb-8">
                                 <h2 class="text-xl font-bold text-white mb-2">Complete Payment</h2>
+                                <span class="my-4 flex flex-row items-center gap-1 text-white">
+                                {{ range $order := .ActiveOrders }}
+                                {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
+                                    <span class="p-2 pl-4 rounded-l-2xl rounded-r-md bg-slate-700">
+                                    {{ $order.Braintree.BrainTree.RecipientName }}
+                                    </span>
+                                    <span class="p-2 pr-4 rounded-l-md rounded-r-2xl bg-slate-700">
+                                    <b>{{ $order.Braintree.BrainTree.Amount }}</b> {{ $order.Braintree.BrainTree.CurrencyISOCode }}
+                                    </span>
+                                {{ end }}
+                                </span>
                                 <p class="text-gray-300">Click the button below to open PayPal and complete your payment
                                 </p>
                             </div>
@@ -332,6 +345,8 @@
                 </svg>
                     Cancelled
                 `;
+
+                location.reload();
             }
         }
 
