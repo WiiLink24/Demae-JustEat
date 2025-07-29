@@ -18,6 +18,7 @@ type ActiveOrder struct {
 const (
 	GetOrderParams = `SELECT braintree, wii_id FROM users WHERE email = $1 AND braintree IS NOT NULL`
 	GetOrderForWii = `SELECT braintree FROM users WHERE wii_id = $1 AND braintree IS NOT NULL`
+	ClearOrder     = `UPDATE users SET braintree = NULL, basket_id = NULL WHERE wii_id = $1`
 )
 
 func getActiveOrders(email string) (map[uint32]justeat.CombinedBrainTree, error) {
@@ -63,6 +64,11 @@ func getActiveOrderForWii(hollywoodId string) (*justeat.CombinedBrainTree, error
 	}
 
 	return &payload, nil
+}
+
+func clearOrder(hollywoodId string) error {
+	_, err := pool.Exec(ctx, ClearOrder, hollywoodId)
+	return err
 }
 
 func displayPaymentScreen(c *gin.Context) {
@@ -170,5 +176,18 @@ func finalizePayment(c *gin.Context) {
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
+	}
+}
+
+func cancelPayment(c *gin.Context) {
+	hollywoodID := c.PostForm("hollywood_id")
+	if hollywoodID == "" {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	err := clearOrder(hollywoodID)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
 	}
 }

@@ -74,6 +74,7 @@ func RunServer(config *demae.Config, handler http.Handler) {
 	{
 		auth.GET("/pay", displayPaymentScreen)
 		auth.POST("/finalize", finalizePayment)
+		auth.POST("/cancel", cancelPayment)
 	}
 
 	authLink := r.Group("/")

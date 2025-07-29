@@ -196,9 +196,8 @@
     </script>
 
     <script>
-        function done() {
+        async function done() {
             // Send a POST request to /finalize with the hollywood in the POST form.
-
             const button = document.getElementById("done");
             button.innerHTML = `
                 <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -213,7 +212,7 @@
             // TODO: Put the actual hollywood id
             formData.append("hollywood_id", "");
 
-            fetch("/finalize", {
+            await fetch("/finalize", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: {
@@ -223,7 +222,7 @@
             })
         }
 
-        function cancelOrder() {
+        async function cancelOrder() {
             if (confirm('Are you sure you want to cancel this order?')) {
                 const button = document.getElementById("cancel");
                 button.innerHTML = `
@@ -234,6 +233,27 @@
                     Cancelling...
                 `;
                 button.disabled = true;
+
+                const formData = new URLSearchParams();
+                // TODO: Put the actual hollywood id
+                formData.append("hollywood_id", "610515068");
+
+                await fetch("/cancel", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: formData
+                });
+
+                button.innerHTML = `
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                    Cancelled
+                `;
             }
         }
 
