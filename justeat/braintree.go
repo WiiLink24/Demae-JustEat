@@ -3,6 +3,7 @@ package justeat
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
@@ -104,7 +105,6 @@ func (j *JEClient) makePaypalURL(config *BrainTreeConfig, brainTree BrainTreeCre
 		return nil, err
 	}
 
-	fmt.Println(string(data))
 	if resp.StatusCode != http.StatusCreated {
 		return nil, PaypalURLFailed
 	}
@@ -217,7 +217,16 @@ func (j *JEClient) sendPaypalMetadata() (*PaypalMetadata, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(data))
+	var message map[string]any
+	err = json.Unmarshal(data, &message)
+	if err != nil {
+		return nil, err
+	}
+
+	if message["status"].(string) != "OK" {
+		return nil, errors.New(message["response_message"].(string))
+	}
+
 	return &meta, nil
 }
 

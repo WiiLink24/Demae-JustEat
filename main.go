@@ -75,7 +75,7 @@ func main() {
 		nwapi.NormalResponse("webApi_document_template", documentTemplate)
 		nwapi.NormalResponse("webApi_area_list", areaList)
 		nwapi.MultipleRootNodes("webApi_category_list", categoryList)
-		nwapi.NormalResponse("webApi_area_shopinfo", func(r *Response) {})
+		nwapi.NormalResponse("webApi_area_shopinfo", shopInfo)
 		nwapi.NormalResponse("webApi_shop_list", shopList)
 		nwapi.MultipleRootNodes("webApi_shop_one", shopOne)
 		nwapi.MultipleRootNodes("webApi_menu_list", menuList)

@@ -393,29 +393,6 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		RecommendedItemList: demae.KVFieldWChildren{
 			Value: []any{
 				recommendations[:],
-				demae.Item{
-					XMLName:   xml.Name{Local: "container4"},
-					MenuCode:  demae.CDATA{Value: 10},
-					ItemCode:  demae.CDATA{Value: 1},
-					Name:      demae.CDATA{Value: "Pizza"},
-					Price:     demae.CDATA{Value: 10},
-					Info:      demae.CDATA{Value: "Fresh"},
-					Size:      &demae.CDATA{Value: 1},
-					Image:     demae.CDATA{Value: "PIZZA"},
-					IsSoldout: demae.CDATA{Value: 0},
-					SizeList: &demae.KVFieldWChildren{
-						XMLName: xml.Name{Local: "sizeList"},
-						Value: []any{
-							demae.ItemSize{
-								XMLName:   xml.Name{Local: "item1"},
-								ItemCode:  demae.CDATA{Value: 1},
-								Size:      demae.CDATA{Value: 1},
-								Price:     demae.CDATA{Value: 10},
-								IsSoldout: demae.CDATA{Value: 0},
-							},
-						},
-					},
-				},
 			},
 		},
 	}, nil

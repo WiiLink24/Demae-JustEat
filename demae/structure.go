@@ -75,6 +75,11 @@ type Area struct {
 	Kanji4     CDATA    `xml:"kanji4"`
 }
 
+type AreaShopInfo struct {
+	XMLName  xml.Name `xml:"Shop"`
+	ShopCode CDATA    `xml:"shopCode"`
+}
+
 type BasicShop struct {
 	XMLName     xml.Name `xml:"Shop"`
 	ShopCode    CDATA    `xml:"shopCode"`
