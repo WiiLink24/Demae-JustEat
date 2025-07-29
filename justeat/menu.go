@@ -16,11 +16,11 @@ const (
 	NormalNameLength      = 26
 )
 
-func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
+func (j *JEClient) getCorrectMenu(menus []Menu) (*Menu, error) {
 	// The menu is based on the current date and time.
 	zone, err := j.getLocalizedTimeLocation()
 	if err != nil {
-		return Menu{}, err
+		return nil, err
 	}
 
 	// Different menus can be available at different times on the same day.
@@ -53,24 +53,24 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (Menu, error) {
 			for _, timeStruct := range schedule.Times {
 				start, err := time.Parse("15:04:05", timeStruct.FromLocalTime)
 				if err != nil {
-					return Menu{}, err
+					return nil, err
 				}
 
 				end, err := time.Parse("15:04:05", timeStruct.ToLocalTime)
 				if err != nil {
-					return Menu{}, err
+					return nil, err
 				}
 
 				// We found the menu if it is the current day of the week, and the current time is not before or after the
 				// start and end times.
 				if !t.Before(start) && !t.After(end) {
-					return menu, nil
+					return &menu, nil
 				}
 			}
 		}
 	}
 
-	return Menu{}, nil
+	return nil, nil
 }
 
 func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]demae.Item, error) {
