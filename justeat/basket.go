@@ -51,10 +51,10 @@ func formProduct(r *http.Request, itemCode string, quantity int) (*Product, erro
 					continue
 				case 1:
 					// Modifier ID
-					modifierID = strings.Split(s, "]")[0]
+					groupID = demae.DecompressUUID(strings.Split(s, "]")[0])
 				case 2:
 					// Modifier Group ID
-					groupID = strings.Split(s, "]")[0]
+					modifierID = demae.DecompressUUID(strings.Split(s, "]")[0])
 				}
 			}
 
@@ -103,8 +103,8 @@ func (j *JEClient) formDealProduct(r *http.Request) (*Deal, error) {
 	// Split itemCode into it's parts.
 	itemCodes := strings.Split(itemCode, "|")
 	dealId := itemCodes[0]
-	itemId := itemCodes[1]
-	modifierId := itemCodes[2]
+	itemId := demae.DecompressUUID(itemCodes[1])
+	modifierId := demae.DecompressUUID(itemCodes[2])
 
 	product, err := formProduct(r, modifierId, quantity)
 	if err != nil {
@@ -156,7 +156,7 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 
 		deals = append(deals, *deal)
 	} else {
-		product, err := formProduct(r, itemCode, quantity)
+		product, err := formProduct(r, demae.DecompressUUID(itemCode), quantity)
 		if err != nil {
 			return "", err
 		}
@@ -241,7 +241,7 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 }
 
 func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
-	itemCode := r.PostForm.Get("itemCode")
+	itemCode := demae.DecompressUUID(r.PostForm.Get("itemCode"))
 	quantityStr := r.PostForm.Get("quantity")
 
 	quantity, err := strconv.Atoi(quantityStr)
@@ -341,7 +341,7 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 			group := demae.ItemOne{
 				XMLName: xml.Name{Local: fmt.Sprintf("container%d", i)},
 				Info:    demae.CDATA{Value: ""},
-				Code:    demae.CDATA{Value: option.GroupId},
+				Code:    demae.CDATA{Value: demae.CompressUUID(option.GroupId)},
 				Type:    demae.CDATA{Value: 0},
 				Name:    demae.CDATA{Value: fmt.Sprintf("Modifier %d", i+1)},
 				List:    demae.KVFieldWChildren{},
@@ -349,8 +349,8 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 
 			for _, modifier := range option.Modifiers {
 				group.List.Value = append(group.List.Value, demae.Item{
-					MenuCode:   demae.CDATA{Value: modifier.ID},
-					ItemCode:   demae.CDATA{Value: modifier.ID},
+					MenuCode:   demae.CDATA{Value: demae.CompressUUID(modifier.ID)},
+					ItemCode:   demae.CDATA{Value: demae.CompressUUID(modifier.ID)},
 					Name:       demae.CDATA{Value: modifier.Name},
 					Price:      demae.CDATA{Value: 0},
 					Info:       demae.CDATA{Value: 0},
@@ -367,9 +367,9 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		amountStr := fmt.Sprintf("$%.2f", product.TotalPrice)
 		basketItems = append(basketItems, demae.BasketItem{
 			XMLName:       xml.Name{Local: fmt.Sprintf("container%d", i)},
-			BasketNo:      demae.CDATA{Value: product.ProductId},
+			BasketNo:      demae.CDATA{Value: demae.CompressUUID(product.ProductId)},
 			MenuCode:      demae.CDATA{Value: 1},
-			ItemCode:      demae.CDATA{Value: product.ProductId},
+			ItemCode:      demae.CDATA{Value: demae.CompressUUID(product.ProductId)},
 			Name:          demae.CDATA{Value: demae.RemoveInvalidCharacters(product.Name)},
 			Price:         demae.CDATA{Value: priceStr},
 			Size:          demae.CDATA{Value: ""},
@@ -413,7 +413,7 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 				group := demae.ItemOne{
 					XMLName: xml.Name{Local: fmt.Sprintf("container%d", i)},
 					Info:    demae.CDATA{Value: ""},
-					Code:    demae.CDATA{Value: _product.ProductId},
+					Code:    demae.CDATA{Value: demae.CompressUUID(_product.ProductId)},
 					Type:    demae.CDATA{Value: 0},
 					Name:    demae.CDATA{Value: _product.Name},
 					List:    demae.KVFieldWChildren{},
@@ -422,8 +422,8 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 				for _, modifierGroup := range _product.ModifierGroups {
 					for _, modifier := range modifierGroup.Modifiers {
 						group.List.Value = append(group.List.Value, demae.Item{
-							MenuCode:   demae.CDATA{Value: modifier.ID},
-							ItemCode:   demae.CDATA{Value: modifier.ID},
+							MenuCode:   demae.CDATA{Value: demae.CompressUUID(modifier.ID)},
+							ItemCode:   demae.CDATA{Value: demae.CompressUUID(modifier.ID)},
 							Name:       demae.CDATA{Value: modifier.Name},
 							Price:      demae.CDATA{Value: 0},
 							Info:       demae.CDATA{Value: 0},
@@ -442,9 +442,9 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		amountStr := fmt.Sprintf("$%.2f", product.TotalPrice)
 		basketItems = append(basketItems, demae.BasketItem{
 			XMLName:       xml.Name{Local: fmt.Sprintf("container%d", i)},
-			BasketNo:      demae.CDATA{Value: product.ProductId},
+			BasketNo:      demae.CDATA{Value: demae.CompressUUID(product.ProductId)},
 			MenuCode:      demae.CDATA{Value: 1},
-			ItemCode:      demae.CDATA{Value: product.ProductId},
+			ItemCode:      demae.CDATA{Value: demae.CompressUUID(product.ProductId)},
 			Name:          demae.CDATA{Value: demae.RemoveInvalidCharacters(product.Name)},
 			Price:         demae.CDATA{Value: priceStr},
 			Size:          demae.CDATA{Value: ""},

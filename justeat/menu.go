@@ -345,7 +345,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						// We also need the Deal ID for when we add to basket.
 						// Therefore, we use this format for the item code:
 						// dealID|itemID|modifierID
-						ItemCode:  demae.CDATA{Value: group.Id + "|" + item.Id + "|" + curItemVar.Id},
+						ItemCode:  demae.CDATA{Value: group.Id + "|" + demae.CompressUUID(item.Id) + "|" + demae.CompressUUID(curItemVar.Id)},
 						Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(curItemVar.Name), 21, 2)},
 						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
 						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id))},
@@ -362,7 +362,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 
 			variations = append(variations, demae.ItemSize{
 				XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-				ItemCode:  demae.CDATA{Value: variation.Id},
+				ItemCode:  demae.CDATA{Value: demae.CompressUUID(variation.Id)},
 				Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(name), 21, 2)},
 				Price:     demae.CDATA{Value: variation.BasePrice},
 				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id))},
@@ -380,7 +380,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 		Item: demae.Item{
 			XMLName:    xml.Name{Local: "item"},
 			MenuCode:   demae.CDATA{Value: categoryID},
-			ItemCode:   demae.CDATA{Value: item.Id},
+			ItemCode:   demae.CDATA{Value: demae.CompressUUID(item.Id)},
 			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), nameWrapLen, -1)},
 			Price:      demae.CDATA{Value: 0},
 			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 3)},
@@ -472,7 +472,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 			parent := demae.ItemOne{
 				XMLName: xml.Name{Local: fmt.Sprintf("container%d", i)},
 				Info:    demae.CDATA{Value: fmt.Sprintf("Max item selection is %d, minimum %d", group.MaxChoices, group.MinChoices)},
-				Code:    demae.CDATA{Value: group.Id},
+				Code:    demae.CDATA{Value: demae.CompressUUID(group.Id)},
 				Type:    demae.CDATA{Value: buttonType},
 				Name:    demae.CDATA{Value: group.Name},
 				List: demae.KVFieldWChildren{
@@ -483,8 +483,8 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 			for _, set := range modifiers.ModifierSets {
 				if slices.Contains(group.Modifiers, set.Id) {
 					parent.List.Value = append(parent.List.Value, demae.Item{
-						MenuCode:  demae.CDATA{Value: set.Modifier.Id},
-						ItemCode:  demae.CDATA{Value: set.Modifier.Id},
+						MenuCode:  demae.CDATA{Value: demae.CompressUUID(group.Id)},
+						ItemCode:  demae.CDATA{Value: demae.CompressUUID(set.Modifier.Id)},
 						Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
 						Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
 						Info:      demae.CDATA{Value: "None yet"},
