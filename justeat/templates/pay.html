@@ -207,8 +207,13 @@
                             <div class="text-left mb-8">
                                 <h2 class="text-xl font-bold text-white mb-6">Complete Payment</h2>
 
-                                {{ range $order := .ActiveOrders }}
-                                <div class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 relative font-[monospace] animate-opacity">
+                                <div id="heightHelper" onload="setTimeout(() => {
+                                    document.getElementById('heightHelper').style.height = 'auto';
+                                }, 500);"
+                                class="transition-all duration-500 animate-grow relative">
+                                {{ range $id, $order := .ActiveOrders }}
+                                {{ if lt $id 1 }}
+                                <div class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -265,6 +270,8 @@
                                     </div>
                                 </div>
                                 {{ end }}
+                                {{ end }}
+                                </div>
 
                                 <p class="text-gray-300 mt-4">Click the button below to open PayPal and complete your
                                     payment</p>
@@ -529,6 +536,29 @@
 
     .animate-opacity-out {
         animation: fadeOut 0.5s ease-in-out forwards;
+    }
+
+    .animate-grow {
+        animation: grow 0.5s ease-in-out forwards;
+        transition: 0.3s ease-in-out;
+    }
+
+    .delay-500 {
+        animation-delay: 0.5s;
+    }
+
+    .animation-forwards {
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes grow {
+        from {
+            height: 0;
+        }
+
+        to {
+            height: 330px;
+        }
     }
 
     @keyframes fadeIn {
