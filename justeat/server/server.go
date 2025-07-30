@@ -56,6 +56,10 @@ func RunServer(config *demae.Config, handler http.Handler) {
 	defer pool.Close()
 
 	// Set up HTTP
+	if config.IsProd {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.Default()
 	r.LoadHTMLGlob("./justeat/templates/*")
 

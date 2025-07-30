@@ -11,6 +11,7 @@
     <!-- Discord Webhook -->
     <ErrorWebhook></ErrorWebhook>
     <OrderWebhook></OrderWebhook>
+    <IsProd></IsProd>
 
     <!-- External APIs -->
     <SentryDSN></SentryDSN>
