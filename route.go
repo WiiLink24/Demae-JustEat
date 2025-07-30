@@ -65,7 +65,9 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 
 func (r *Route) Handle() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println(req.URL.String())
+		if !config.IsProd {
+			fmt.Println(req.URL.String())
+		}
 
 		// If this is a POST request it is either an actual request or an error.
 		var actionName string
