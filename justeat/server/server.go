@@ -26,7 +26,7 @@ func checkError(err error) {
 	}
 }
 
-func RunServer(config *demae.Config, handler http.Handler) {
+func RunServer(config *demae.Config) {
 	// OAuth2 config
 	provider, err := oidc.NewProvider(ctx, config.OIDCConfig.Provider)
 	if err != nil {

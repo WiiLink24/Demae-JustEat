@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -105,20 +104,6 @@ func main() {
 	}
 
 	// Start the Demae Channel server as well as the Just Eat payment server.
-	actions := []func(*demae.Config, http.Handler){demaeMain, server.RunServer}
-	handlers := []http.Handler{r.Handle(), nil}
-	wg := &sync.WaitGroup{}
-	wg.Add(len(actions))
-	for i, action := range actions {
-		go func(a func(*demae.Config, http.Handler)) {
-			defer wg.Done()
-			a(config, handlers[i])
-		}(action)
-	}
-
-	wg.Wait()
-}
-
-func demaeMain(config *demae.Config, handler http.Handler) {
-	log.Fatal(http.ListenAndServe(config.DemaeAddress, handler))
+	go server.RunServer(config)
+	log.Fatal(http.ListenAndServe(config.DemaeAddress, r.Handle()))
 }
