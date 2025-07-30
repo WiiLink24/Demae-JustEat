@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -66,19 +65,8 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 
 func (r *Route) Handle() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if strings.Contains(req.URL.Path, "itemimg") {
-			splitUrl := strings.Split(req.URL.Path, "/")
-
-			img, err := os.ReadFile(fmt.Sprintf("logos/%s/%s", splitUrl[2], splitUrl[3]))
-			if err != nil {
-				printError(w, "image not found", http.StatusNotFound)
-			}
-
-			w.Write(img)
-			return
-		}
-
 		fmt.Println(req.URL.String())
+
 		// If this is a POST request it is either an actual request or an error.
 		var actionName string
 		var serviceType string

@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -93,7 +92,9 @@ func main() {
 	logo := r.HandleGroup("logoimg2")
 	{
 		logo.ServeImage(func(r *Response) {
-			paths := strings.Split(r.request.URL.Path, "/")
+			// Remove "l_" from the URL.
+			path := strings.Replace(r.request.URL.Path, "l_", "", 1)
+			paths := strings.Split(path, "/")
 
 			data, err := os.ReadFile(fmt.Sprintf("logos/%s", paths[2]))
 			if err != nil {
@@ -104,21 +105,23 @@ func main() {
 		})
 	}
 
-	// Start the Demae Channel server as well as the Just Eat payment server.
-	actions := []func(*demae.Config, http.Handler){demaeMain, server.RunServer}
-	handlers := []http.Handler{r.Handle(), nil}
-	wg := &sync.WaitGroup{}
-	wg.Add(len(actions))
-	for i, action := range actions {
-		go func(a func(*demae.Config, http.Handler)) {
-			defer wg.Done()
-			a(config, handlers[i])
-		}(action)
+	itemImg := r.HandleGroup("itemimg")
+	{
+		itemImg.ServeImage(func(r *Response) {
+			path := strings.Replace(r.request.URL.Path, "l_", "", 1)
+			splitUrl := strings.Split(path, "/")
+
+			img, err := os.ReadFile(fmt.Sprintf("logos/%s/%s", splitUrl[2], splitUrl[3]))
+			if err != nil {
+				log.Println("failed to read image")
+			}
+
+			(*r.writer).Write(img)
+			return
+		})
 	}
 
-	wg.Wait()
-}
-
-func demaeMain(config *demae.Config, handler http.Handler) {
-	log.Fatal(http.ListenAndServe(config.DemaeAddress, handler))
+	// Start the Demae Channel server as well as the Just Eat payment server.
+	go server.RunServer(config)
+	log.Fatal(http.ListenAndServe(config.DemaeAddress, r.Handle()))
 }
