@@ -119,8 +119,9 @@
                                     ({{ $formattedWiiNumber }})</option>
                                 {{ end }}
                             </select>
+                            <div id="heightHelper" class="transition-all duration-500 relative">
                             {{ range $order := .ActiveOrders }}
-                                <div id="{{ $order.WiiNumber }}" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity hidden relative">
+                                <div id="{{ $order.WiiNumber }}" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -177,6 +178,7 @@
                                     </div>
                                 </div>
                                 {{ end }}
+                                </div>
                             <span id="PayPalLink" class="w-full">
                                 <button onclick="" disabled
                                     class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
@@ -495,11 +497,15 @@
                 });
                 const orderDetails = document.getElementById(selectedOrder.WiiNumber);
                 if (orderDetails) {
-                        orderDetails.classList.remove("animate-opacity-out");
-                        orderDetails.classList.add("animate-opacity");
+                    document.getElementById("heightHelper").style.height = "340px";
+                    orderDetails.classList.remove("animate-opacity-out");
+                    orderDetails.classList.add("animate-opacity");
                     setTimeout(() => {
                         orderDetails.classList.remove("hidden");
                     }, 500);
+                    setTimeout(() => {
+                        document.getElementById("heightHelper").style.height = (orderDetails.offsetHeight + 30) + "px";
+                    }, 1000);
                 }
             }
         }
@@ -541,13 +547,13 @@
 
     @keyframes fadeOut {
         from {
-            height: auto;
+            transform: scale(1);
             opacity: 1;
             overflow: hidden;
         }
 
         to {
-            height: 0;
+            transform: scale(0.95);
             opacity: 0;
             overflow: hidden;
         }
