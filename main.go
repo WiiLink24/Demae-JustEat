@@ -92,7 +92,9 @@ func main() {
 	logo := r.HandleGroup("logoimg2")
 	{
 		logo.ServeImage(func(r *Response) {
-			paths := strings.Split(r.request.URL.Path, "/")
+			// Remove "l_" from the URL.
+			path := strings.Replace(r.request.URL.Path, "l_", "", 1)
+			paths := strings.Split(path, "/")
 
 			data, err := os.ReadFile(fmt.Sprintf("logos/%s", paths[2]))
 			if err != nil {
@@ -100,6 +102,22 @@ func main() {
 			}
 
 			(*r.writer).Write(data)
+		})
+	}
+
+	itemImg := r.HandleGroup("itemimg")
+	{
+		itemImg.ServeImage(func(r *Response) {
+			path := strings.Replace(r.request.URL.Path, "l_", "", 1)
+			splitUrl := strings.Split(path, "/")
+
+			img, err := os.ReadFile(fmt.Sprintf("logos/%s/%s", splitUrl[2], splitUrl[3]))
+			if err != nil {
+				log.Println("failed to read image")
+			}
+
+			(*r.writer).Write(img)
+			return
 		})
 	}
 
