@@ -134,6 +134,11 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		return nil, err
 	}
 
+	menu, err := j.getCorrectMenu(restaurant.Menus)
+	if err != nil {
+		return nil, err
+	}
+
 	var retItems []demae.Item
 	i := 0
 	for _, item := range items.Items {
@@ -144,8 +149,17 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
+				// Find the category for the product
+				var category Category
+				for _, _category := range menu.Categories {
+					if slices.Contains(_category.ItemIds, item.Id) {
+						category = _category
+						break
+					}
+				}
+
 				// Download image and process item.
-				itemObj := j.getItem(item, id, restaurant.RestaurantId, modifiers, items, i, soldOutItems, RecommendedNameLength)
+				itemObj := j.getItem(item, id, category.Id, modifiers, items, i, soldOutItems, RecommendedNameLength)
 				if itemObj == nil {
 					continue
 				}
@@ -310,8 +324,11 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 }
 
 func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string, nameWrapLen uint) *demae.NestedItem {
+	imageId := demae.CompressUUID(item.Id)
 	if len(item.ImageSources) != 0 {
 		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, item.Id)
+	} else {
+		imageId = "non"
 	}
 
 	if item.Description == "" {
@@ -386,7 +403,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 3)},
 			Size:       nil,
 			IsSelected: nil,
-			Image:      demae.CDATA{Value: item.Id},
+			Image:      demae.CDATA{Value: imageId},
 			IsSoldout:  demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, item.Id))},
 			SizeList: &demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "sizeList"},
