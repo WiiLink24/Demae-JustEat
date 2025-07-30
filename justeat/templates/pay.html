@@ -120,7 +120,7 @@
                                 {{ end }}
                             </select>
                             {{ range $order := .ActiveOrders }}
-                                <div id="{{ $order.WiiNumber }}" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 animate-opacity hidden relative">
+                                <div id="{{ $order.WiiNumber }}" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity hidden relative">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -137,17 +137,16 @@
                                             {{ if lt $index 3 }}
                                             <div
                                                 class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
-                                                <div class="flex items-center">
+                                                <div class="flex items-start">
                                                     <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
                                                     <span class="text-gray-200">{{ $item.Name }}</span>
                                                 </div>
-                                                <span class="text-white font-medium">{{ $item.UnitAmount }} {{
+                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount }} {{
                                                     $order.Braintree.BrainTree.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
                                             {{ end }}
 
-                                            <!-- Fade mask for items beyond the first 3 -->
                                             {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
                                             <div
                                                 class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
@@ -207,7 +206,7 @@
                                 <h2 class="text-xl font-bold text-white mb-6">Complete Payment</h2>
 
                                 {{ range $order := .ActiveOrders }}
-                                <div class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 relative animate-opacity">
+                                <div class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 relative font-[monospace] animate-opacity">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -224,17 +223,16 @@
                                             {{ if lt $index 3 }}
                                             <div
                                                 class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
-                                                <div class="flex items-center">
+                                                <div class="flex items-start">
                                                     <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
                                                     <span class="text-gray-200">{{ $item.Name }}</span>
                                                 </div>
-                                                <span class="text-white font-medium">{{ $item.UnitAmount }} {{
+                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount }} {{
                                                     $order.Braintree.BrainTree.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
                                             {{ end }}
 
-                                            <!-- Fade mask for items beyond the first 3 -->
                                             {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
                                             <div
                                                 class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
