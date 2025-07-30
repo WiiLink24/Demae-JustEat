@@ -506,7 +506,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 						Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
 						Info:      demae.CDATA{Value: "None yet"},
 						Size:      nil,
-						Image:     demae.CDATA{Value: "none"},
+						Image:     demae.CDATA{Value: "non"},
 						IsSoldout: demae.CDATA{Value: 0},
 						SizeList:  nil,
 					})
