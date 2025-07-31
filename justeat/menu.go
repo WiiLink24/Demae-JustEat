@@ -369,7 +369,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						ItemCode:  demae.CDATA{Value: group.Id + "|" + demae.CompressUUID(item.Id) + "|" + demae.CompressUUID(curItemVar.Id)},
 						Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(curItemVar.Name), 21, 2)},
 						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
-						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id))},
+						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id) || slices.Contains(soldOutItems, item.Id))},
 					})
 				}
 			}
@@ -386,7 +386,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 				ItemCode:  demae.CDATA{Value: demae.CompressUUID(variation.Id)},
 				Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(name), 21, 2)},
 				Price:     demae.CDATA{Value: variation.BasePrice},
-				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id))},
+				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id) || slices.Contains(soldOutItems, item.Id))},
 			})
 		}
 	}
