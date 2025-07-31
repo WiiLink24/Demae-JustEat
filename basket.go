@@ -6,6 +6,7 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/gofrs/uuid"
+	"log"
 	"time"
 )
 
@@ -161,7 +162,12 @@ func orderDone(r *Response) {
 		return
 	}
 
-	client.PlaceOrder(r.request, basketId)
+	err = client.PlaceOrder(r.request, basketId)
+	if err != nil {
+		r.ReportError(err)
+		log.Println(err)
+		return
+	}
 
 	currentTime := time.Now().Format("200602011504")
 	r.AddKVWChildNode("Message", demae.KVField{
