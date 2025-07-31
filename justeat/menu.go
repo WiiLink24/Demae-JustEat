@@ -147,6 +147,10 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 			break
 		}
 
+		if recs["themes"] == nil {
+			break
+		}
+
 		for _, rec := range recs["themes"].([]any)[0].(map[string]any)["recommendations"].([]any) {
 			if rec.(map[string]any)["productId"] == item.Id {
 				// Find the category for the product
