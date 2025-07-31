@@ -91,11 +91,6 @@
             <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col items-center max-w-md w-full space-y-6">
                     <div class="mt-16 md:mt-0 relative group w-full">
-                        <span class="mb-3 text-white flex opacity-70"><img
-                                src="https://accounts.wiilink.ca/assets/icon/info.svg" alt="Info"
-                                class="w-5 h-5 invert mr-2" /> <span class="-translate-y-1">Remember to double check
-                                your address information on your Wii, as it is required to dispatch your
-                                order.</span></span>
                         {{ if gt (len .ActiveOrders) 1 }}
                         <div
                             class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-5 md:p-8 glow-effect">
@@ -104,7 +99,7 @@
                                 <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jcmVkaXQtY2FyZC1pY29uIGx1Y2lkZS1jcmVkaXQtY2FyZCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiB4PSIyIiB5PSI1IiByeD0iMiIvPjxsaW5lIHgxPSIyIiB4Mj0iMjIiIHkxPSIxMCIgeTI9IjEwIi8+PC9zdmc+"
                                     class="w-16 h-16">
                             </div>
-                            <h2 class="text-lg font-semibold text-white mb-2">Just to be clear...</h2>
+                            <h2 class="text-lg font-semibold text-white mb-2">Complete Payment</h2>
                             <p class="text-gray-300 mb-4">You have {{ .ActiveOrders | len }} active orders.
                                 Which one would you like to pay for?</p>
                             <select id="orderSelect"
@@ -120,8 +115,9 @@
                                 {{ end }}
                             </select>
                             <div id="heightHelper" class="transition-all duration-500 relative">
-                            {{ range $order := .ActiveOrders }}
-                                <div id="{{ $order.WiiNumber }}" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
+                                {{ range $order := .ActiveOrders }}
+                                <div id="{{ $order.WiiNumber }}"
+                                    class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -142,7 +138,8 @@
                                                     <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
                                                     <span class="text-gray-200">{{ $item.Name }}</span>
                                                 </div>
-                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount }} {{
+                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
+                                                    }} {{
                                                     $order.Braintree.BrainTree.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
@@ -178,7 +175,7 @@
                                     </div>
                                 </div>
                                 {{ end }}
-                                </div>
+                            </div>
                             <span id="PayPalLink" class="w-full">
                                 <button onclick="" disabled
                                     class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
@@ -204,75 +201,73 @@
                                         alt="Icon" class="w-10 h-10 invert" />
                                 </div>
                             </div>
-                            <div class="text-left mb-8">
+                            <div class="text-left mb-3">
                                 <h2 class="text-xl font-bold text-white mb-6">Complete Payment</h2>
 
-                                <div id="heightHelper2"
-                                class="transition-all duration-500 relative">
-                                {{ range $id, $order := .ActiveOrders }}
-                                {{ if lt $id 1 }}
-                                <div id="singleSaleTicket" class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
-                                    <span class="flex flex-row justify-between text-xl font-semibold">
-                                        {{ $order.Braintree.BrainTree.RecipientName }}
+                                <div id="heightHelper2" class="transition-all duration-500 relative">
+                                    {{ range $id, $order := .ActiveOrders }}
+                                    {{ if lt $id 1 }}
+                                    <div id="singleSaleTicket"
+                                        class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
+                                        <span class="flex flex-row justify-between text-xl font-semibold">
+                                            {{ $order.Braintree.BrainTree.RecipientName }}
 
-                                        <div class="text-right text-sm font-medium text-gray-300">
-                                            <div>{{ $order.Braintree.BrainTree.Line1 }}</div>
-                                            <div>{{ $order.Braintree.BrainTree.City }}, {{
-                                                $order.Braintree.BrainTree.PostalCode }}</div>
-                                        </div>
-                                    </span>
+                                            <div class="text-right text-sm font-medium text-gray-300">
+                                                <div>{{ $order.Braintree.BrainTree.Line1 }}</div>
+                                                <div>{{ $order.Braintree.BrainTree.City }}, {{
+                                                    $order.Braintree.BrainTree.PostalCode }}</div>
+                                            </div>
+                                        </span>
 
-                                    <div class="pt-3 relative">
-                                        <div class="space-y-2 relative">
-                                            {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
-                                            {{ if lt $index 3 }}
-                                            <div
-                                                class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
-                                                <div class="flex items-start">
-                                                    <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
-                                                    <span class="text-gray-200">{{ $item.Name }}</span>
+                                        <div class="pt-3 relative">
+                                            <div class="space-y-2 relative">
+                                                {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                                {{ if lt $index 3 }}
+                                                <div
+                                                    class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
+                                                    <div class="flex items-start">
+                                                        <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
+                                                        <span class="text-gray-200">{{ $item.Name }}</span>
+                                                    </div>
+                                                    <span class="w-32 text-right text-white font-medium">{{
+                                                        $item.UnitAmount }} {{
+                                                        $order.Braintree.BrainTree.CurrencyISOCode }}</span>
                                                 </div>
-                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount }} {{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span>
-                                            </div>
-                                            {{ end }}
-                                            {{ end }}
+                                                {{ end }}
+                                                {{ end }}
 
-                                            {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
-                                            <div
-                                                class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
+                                                {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                                <div
+                                                    class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
+                                                </div>
+                                                <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
+                                                    {{ len $order.Braintree.BrainTree.LineItems }} items
+                                                </div>
+                                                {{ end }}
                                             </div>
-                                            <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                                {{ len $order.Braintree.BrainTree.LineItems }} items
+                                        </div>
+
+                                        <div class="pt-3 border-t border-gray-600">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-300 text-lg">Total</span>
+                                                <span class="text-white font-bold text-2xl">{{
+                                                    $order.Braintree.BrainTree.Amount }} <span
+                                                        class="text-lg font-medium">{{
+                                                        $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
                                             </div>
-                                            {{ end }}
+                                        </div>
+
+                                        <div class="absolute bottom-0 left-0 right-0 h-2 overflow-hidden">
+                                            <svg class="w-full h-2" viewBox="0 0 400 16" preserveAspectRatio="none">
+                                                <path
+                                                    d="M0,16 L10,0 L20,16 L30,0 L40,16 L50,0 L60,16 L70,0 L80,16 L90,0 L100,16 L110,0 L120,16 L130,0 L140,16 L150,0 L160,16 L170,0 L180,16 L190,0 L200,16 L210,0 L220,16 L230,0 L240,16 L250,0 L260,16 L270,0 L280,16 L290,0 L300,16 L310,0 L320,16 L330,0 L340,16 L350,0 L360,16 L370,0 L380,16 L390,0 L400,16"
+                                                    fill="rgb(31 41 55)"></path>
+                                            </svg>
                                         </div>
                                     </div>
-
-                                    <div class="pt-3 border-t border-gray-600">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-300 text-lg">Total</span>
-                                            <span class="text-white font-bold text-2xl">{{
-                                                $order.Braintree.BrainTree.Amount }} <span
-                                                    class="text-lg font-medium">{{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
-                                        </div>
-                                    </div>
-
-                                    <div class="absolute bottom-0 left-0 right-0 h-2 overflow-hidden">
-                                        <svg class="w-full h-2" viewBox="0 0 400 16" preserveAspectRatio="none">
-                                            <path
-                                                d="M0,16 L10,0 L20,16 L30,0 L40,16 L50,0 L60,16 L70,0 L80,16 L90,0 L100,16 L110,0 L120,16 L130,0 L140,16 L150,0 L160,16 L170,0 L180,16 L190,0 L200,16 L210,0 L220,16 L230,0 L240,16 L250,0 L260,16 L270,0 L280,16 L290,0 L300,16 L310,0 L320,16 L330,0 L340,16 L350,0 L360,16 L370,0 L380,16 L390,0 L400,16"
-                                                fill="rgb(31 41 55)"></path>
-                                        </svg>
-                                    </div>
+                                    {{ end }}
+                                    {{ end }}
                                 </div>
-                                {{ end }}
-                                {{ end }}
-                                </div>
-
-                                <p class="text-gray-300 mt-4">Click the button below to open PayPal and complete your
-                                    payment</p>
                             </div>
                             <div class="flex justify-center">
                                 <button id="payment"
@@ -285,6 +280,13 @@
                                     </svg>
                                     Open PayPal Payment
                                 </button>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-400">
+                                By proceeding, you agree to the Food Channel JustEat
+                                <a href="https://wiilink.ca/je/tos" target="_blank"
+                                    class="text-blue-400 hover:underline">Terms of Service</a> and
+                                <a href="https://wiilink.ca/je/privacy-policy" target="_blank"
+                                    class="text-blue-400 hover:underline">Privacy Policy</a>.
                             </div>
                         </div>
                         {{ end }}
@@ -418,12 +420,12 @@
             const singleSaleTicket = document.getElementById("singleSaleTicket");
             heightHelper.style.height = "0px";
             setTimeout(() => {
-                heightHelper.style.height= "340px";
+                heightHelper.style.height = "340px";
             }, 10);
             setTimeout(() => {
                 if (singleSaleTicket) {
                     heightHelper.classList.remove("animate-grow");
-                    heightHelper.style.height = (singleSaleTicket.offsetHeight + 30) + "px";
+                    heightHelper.style.height = (singleSaleTicket.offsetHeight + 10) + "px";
                 }
             }, 1400);
         }
