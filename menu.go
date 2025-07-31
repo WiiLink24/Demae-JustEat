@@ -58,7 +58,7 @@ func itemOne(r *Response) {
 		return
 	}
 
-	itemCode := demae.DecompressUUID(r.request.URL.Query().Get("itemCode"))
+	itemCode := r.request.URL.Query().Get("itemCode")
 	item, price, err := client.GetItemData(r.request.URL.Query().Get("shopCode"), r.request.URL.Query().Get("menuCode"), itemCode)
 	if err != nil {
 		r.ReportError(err)
