@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"strconv"
@@ -10,16 +11,38 @@ import (
 
 // Supported countries
 var (
-	supportedCountries      = []string{"Australia", "Austria", "Germany", "Ireland", "Italy", "New Zealand", "Spain", "United Kingdom"}
+	supportedCountries    = []string{"Australia", "Austria", "Germany", "Ireland", "Italy", "New Zealand", "Spain", "United Kingdom"}
+	supportedCountriesMap = map[string]string{
+		"AU": "Australia",
+		"AT": "Austria",
+		"DE": "Germany",
+		"IE": "Ireland",
+		"IT": "Italy",
+		"NZ": "New Zealand",
+		"ES": "Spain",
+		"GB": "United Kingdom",
+	}
 	supportedCountriesCodes = []justeat.Country{justeat.Australia, justeat.Austria, justeat.Germany, justeat.Ireland, justeat.Italy, justeat.NewZealand, justeat.Spain, justeat.UnitedKingdom}
+	adminCodeNameCache      = map[string]string{}
 )
 
 func GetAdministrativeRegions(country justeat.Country) []demae.AreaNames {
 	var areaNames []demae.AreaNames
 
+	// Admin code for UK is GB.
+	adminCode := string(country)
+	if country == justeat.UnitedKingdom {
+		adminCode = "GB"
+	}
+
 	for _, state := range geonameStates {
-		if !strings.HasPrefix(state.Codes, string(country)) {
+		if !strings.HasPrefix(state.Codes, adminCode) {
 			continue
+		}
+
+		// Ex: GB.ENG (United Kingdom, England)
+		if _, ok := adminCodeNameCache[state.Codes]; !ok {
+			adminCodeNameCache[state.Codes] = state.Name
 		}
 
 		areaNames = append(areaNames, demae.AreaNames{
@@ -46,7 +69,7 @@ func GetCitiesByAdminCode(stateCode, areaCode string) []demae.Area {
 				AreaCode:   demae.CDATA{Value: areaCode},
 				IsNextArea: demae.CDATA{Value: 0},
 				Display:    demae.CDATA{Value: 1},
-				Kanji1:     demae.CDATA{Value: "Test"},
+				Kanji1:     demae.CDATA{Value: supportedCountriesMap[codes[0]]},
 				Kanji2:     demae.CDATA{Value: city.Name},
 				Kanji3:     demae.CDATA{Value: ""},
 				Kanji4:     demae.CDATA{Value: ""},
@@ -120,7 +143,7 @@ func areaList(r *Response) {
 		var countriesList []any
 		for i, country := range supportedCountries {
 			countriesList = append(countriesList, demae.KVFieldWChildren{
-				XMLName: xml.Name{Local: "place"},
+				XMLName: xml.Name{Local: fmt.Sprintf("place%d", i)},
 				Value: []any{
 					demae.KVField{
 						XMLName: xml.Name{Local: "segment"},
@@ -151,7 +174,7 @@ func areaList(r *Response) {
 			},
 			demae.KVField{
 				XMLName: xml.Name{Local: "segment"},
-				Value:   "Test",
+				Value:   adminCodeNameCache[areaCode],
 			},
 			demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "list"},
