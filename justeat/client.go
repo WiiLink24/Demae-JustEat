@@ -3,8 +3,10 @@ package justeat
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"io"
 	"net/http"
@@ -64,7 +66,9 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 	}
 
 	err = client.SetAuth()
-	if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, NotLinked
+	} else if err != nil {
 		return nil, err
 	}
 
