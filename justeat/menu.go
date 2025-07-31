@@ -459,6 +459,8 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	if len(itemIDs) == 3 {
 		// We need the modifier code.
 		itemCode = demae.DecompressUUID(itemIDs[2])
+	} else {
+		itemCode = demae.DecompressUUID(itemCode)
 	}
 
 	var variation Variation
