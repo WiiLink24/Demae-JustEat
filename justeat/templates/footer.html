@@ -1,0 +1,108 @@
+
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    mobileMenuBtn.addEventListener("click", () => {
+        sidebar.classList.remove("-translate-x-full");
+        overlay.classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+    });
+
+    function closeSidebar() {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+    }
+
+    closeSidebarBtn.addEventListener("click", closeSidebar);
+    overlay.addEventListener("click", closeSidebar);
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth >= 768) {
+            overlay.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    });
+
+    const sidebarLinks = document.querySelectorAll("#sidebar a");
+    sidebarLinks.forEach((link) => {
+        const linkUrl = new URL(link.href);
+        const currentUrl = new URL(window.location.href);
+
+        if (linkUrl.pathname === currentUrl.pathname) {
+            link.classList.add("!bg-blue-500");
+        }
+    });
+</script>
+
+</body>
+
+<style>
+    :root {
+        interpolate-size: allow-keywords;
+    }
+
+    .animate-opacity {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .animate-opacity-out {
+        animation: fadeOut 0.5s ease-in-out forwards;
+    }
+
+    .animate-grow {
+        animation: grow 0.5s ease-in-out forwards;
+        transition: 0.3s ease-in-out;
+    }
+
+    .delay-500 {
+        animation-delay: 0.5s;
+    }
+
+    .animation-forwards {
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes grow {
+        from {
+            height: 0;
+        }
+
+        to {
+            height: 330px;
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        to {
+            height: auto;
+            opacity: 1;
+            overflow: hidden;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            transform: scale(1);
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        to {
+            transform: scale(0.95);
+            opacity: 0;
+            overflow: hidden;
+        }
+    }
+</style>
+
+</html>

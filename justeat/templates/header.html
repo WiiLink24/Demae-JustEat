@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Food Delivery Service" />
+    <meta name="author" content="WiiLink Team" />
+    <meta name="theme-color" content="#1F2937" />
+    <link rel="icon" href="https://accounts.wiilink.ca/assets/icon/favicon.png" type="image/png" />
+    <title>Finalize your Payment | WiiLink Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 min-h-screen">
+    <div class="w-screen md:hidden fixed p-6 flex flex-row items-center justify-between z-30">
+        <img src="https://accounts.wiilink.ca/assets/img/account-logo-old.png" alt="Logo" class="h-8" />
+        <button id="mobileMenuBtn"
+            class="p-2 bg-gray-800 rounded-lg text-white shadow-lg border border-gray-700 focus:outline-none">
+            <img src="https://accounts.wiilink.ca/assets/icon/menu.svg" alt="Menu" class="w-6 h-6 invert" />
+        </button>
+    </div>
+
+    <div class="flex flex-row items-start">
+        <div id="sidebar"
+            class="w-full max-w-[300px] h-screen bg-gray-800/80 backdrop-blur-xl border-r border-gray-700 p-6 fixed top-0 left-0 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40">
+            <div class="overflow-y-auto h-full">
+                <div class="mb-6 flex justify-between items-start">
+                    <div>
+                        <img src="https://accounts.wiilink.ca/assets/img/account-logo-old.png" alt="Logo"
+                            class="h-10 mb-6" />
+                        <h1 class="text-xl font-bold text-white mb-1">
+                            WiiLink Account
+                        </h1>
+                        <p class="text-gray-400 text-sm italic">
+                            All your WiiLink data in one place
+                        </p>
+                    </div>
+
+                    <button id="closeSidebarBtn" class="md:hidden text-gray-400 hover:text-white">
+                        <img src="https://accounts.wiilink.ca/assets/icon/x.svg" alt="Close" class="w-6 h-6 invert" />
+                    </button>
+                </div>
+                <p class="menu-label text-gray-400 text-sm font-medium mb-2">
+                    SERVICES
+                </p>
+                <a href="https://account.wiilink.ca/manage"
+                    class="w-full px-4 py-2 bg-gray-700/40 hover:bg-gray-700/60 text-white rounded-xl transition duration-200 flex items-center mb-2">
+                    <img src="https://accounts.wiilink.ca/assets/icon/11.svg" alt="Icon" class="w-5 h-5 invert mr-2" />
+                    Food Delivery Settings
+                </a>
+                <a href="https://billing.wiilink.ca/"
+                    class="mb-2 w-full px-4 py-2 bg-gray-700/40 hover:bg-gray-700/60 text-white rounded-xl transition duration-200 flex items-center">
+                    <img src="https://accounts.wiilink.ca/assets/icon/stripe.svg" alt="Icon"
+                        class="w-5 h-5 invert mr-2" /> Payment Management
+                </a>
+                <a href="https://just-eat.wiilink.ca/pay"
+                    class="mb-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-600/90 text-white rounded-xl transition duration-200 flex items-center">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJhZGdlLWRvbGxhci1zaWduLWljb24gbHVjaWRlLWJhZGdlLWRvbGxhci1zaWduIj48cGF0aCBkPSJNMy44NSA4LjYyYTQgNCAwIDAgMSA0Ljc4LTQuNzcgNCA0IDAgMCAxIDYuNzQgMCA0IDQgMCAwIDEgNC43OCA0Ljc4IDQgNCAwIDAgMSAwIDYuNzQgNCA0IDAgMCAxLTQuNzcgNC43OCA0IDQgMCAwIDEtNi43NSAwIDQgNCAwIDAgMS00Ljc4LTQuNzcgNCA0IDAgMCAxIDAtNi43NloiLz48cGF0aCBkPSJNMTYgOGgtNmEyIDIgMCAxIDAgMCA0aDRhMiAyIDAgMSAxIDAgNEg4Ii8+PHBhdGggZD0iTTEyIDE4VjYiLz48L3N2Zz4="
+                        alt="Icon" class="w-5 h-5 invert mr-2" /> Confirm an Order
+                </a>
+                <hr class="opacity-10">
+                <a href="https://forum.wiilink.ca/auth/oauth2_basic"
+                    class="mt-4 w-full px-4 py-2 bg-green-500/40 hover:bg-green-500/60 text-white rounded-xl transition duration-200 flex items-center mb-2">
+                    <img src="https://accounts.wiilink.ca/assets/icon/message-circle.svg" alt="Icon"
+                        class="w-5 h-5 invert mr-2" /> WiiLink Forum
+                </a>
+            </div>
+
+            <div>
+                <p class="text-sm text-gray-500">© 2025 WiiLink Team</p>
+            </div>
+        </div>
+
+        <div id="sidebarOverlay" class="fixed inset-0 bg-gray-900/80 z-30 hidden md:hidden"></div>
