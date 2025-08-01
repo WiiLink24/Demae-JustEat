@@ -1,28 +1,118 @@
 {{ template "header.html" }}
 
 {{ if .ActiveOrders }}
-        <div class="flex flex-col items-center justify-center mt-10 sm:mt-0 w-full md:ml-[300px] md:w-[calc(100%-300px)] min-h-screen xl:p-6">
-            <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col items-center max-w-md w-full space-y-6">
-                    <div class="mt-16 md:mt-0 relative group w-full">
-                        {{ if gt (len .ActiveOrders) 1 }}
-                        <div class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-5 md:p-8 glow-effect">
-                            <div class="w-16 h-16 p-3 rounded-full bg-blue-700/40 mb-3 flex items-center justify-center">
-                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jcmVkaXQtY2FyZC1pY29uIGx1Y2lkZS1jcmVkaXQtY2FyZCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiB4PSIyIiB5PSI1IiByeD0iMiIvPjxsaW5lIHgxPSIyIiB4Mj0iMjIiIHkxPSIxMCIgeTI9IjEwIi8+PC9zdmc+" class="w-16 h-16">
+<div
+    class="flex flex-col items-center justify-center mt-10 sm:mt-0 w-full md:ml-[300px] md:w-[calc(100%-300px)] min-h-screen xl:p-6">
+    <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center max-w-md w-full space-y-6">
+            <div class="mt-16 md:mt-0 relative group w-full">
+                {{ if gt (len .ActiveOrders) 1 }}
+                <div
+                    class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-5 md:p-8 glow-effect">
+                    <div class="w-16 h-16 p-3 rounded-full bg-blue-700/40 mb-3 flex items-center justify-center">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jcmVkaXQtY2FyZC1pY29uIGx1Y2lkZS1jcmVkaXQtY2FyZCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiB4PSIyIiB5PSI1IiByeD0iMiIvPjxsaW5lIHgxPSIyIiB4Mj0iMjIiIHkxPSIxMCIgeTI9IjEwIi8+PC9zdmc+"
+                            class="w-16 h-16">
+                    </div>
+                    <h2 class="text-lg font-semibold text-white mb-2">Complete Payment</h2>
+                    <p class="text-gray-300 mb-4">You have {{ .ActiveOrders | len }} active orders. Which one would you
+                        like to pay for?</p>
+                    <select id="orderSelect"
+                        class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select an order</option>
+                        {{ range $order := .ActiveOrders }}
+                        {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice
+                        $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
+                        <option value="{{ $order.WiiNumber }}">{{ $order.Braintree.BrainTree.RecipientName }} · {{
+                            $order.Braintree.BrainTree.Amount }}{{ $order.Braintree.BrainTree.CurrencyISOCode }} ({{
+                            $formattedWiiNumber }})</option>
+                        {{ end }}
+                    </select>
+                    <div id="heightHelper" class="transition-all duration-500 relative">
+                        {{ range $order := .ActiveOrders }}
+                        <div id="{{ $order.WiiNumber }}"
+                            class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
+                            <span class="flex flex-row justify-between text-xl font-semibold">
+                                {{ $order.Braintree.BrainTree.RecipientName }}
+
+                                <div class="text-right text-sm font-medium text-gray-300">
+                                    <div>{{ $order.Braintree.BrainTree.Line1 }}</div>
+                                    <div>{{ $order.Braintree.BrainTree.City }}, {{
+                                        $order.Braintree.BrainTree.PostalCode }}</div>
+                                </div>
+                            </span>
+
+                            <div class="pt-3 relative">
+                                <div class="space-y-2 relative">
+                                    {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                    {{ if lt $index 3 }}
+                                    <div
+                                        class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
+                                        <div class="flex items-start">
+                                            <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
+                                            <span class="text-gray-200">{{ $item.Name }}</span>
+                                        </div>
+                                        <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
+                                            }} {{
+                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span>
+                                    </div>
+                                    {{ end }}
+                                    {{ end }}
+
+                                    {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                    <div
+                                        class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
+                                    </div>
+                                    <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
+                                        {{ len $order.Braintree.BrainTree.LineItems }} items
+                                    </div>
+                                    {{ end }}
+                                </div>
                             </div>
-                            <h2 class="text-lg font-semibold text-white mb-2">Complete Payment</h2>
-                            <p class="text-gray-300 mb-4">You have {{ .ActiveOrders | len }} active orders. Which one would you like to pay for?</p>
-                            <select id="orderSelect" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="" disabled selected>Select an order</option>
-                                {{ range $order := .ActiveOrders }}
-                                {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
-                                <option value="{{ $order.WiiNumber }}">{{ $order.Braintree.BrainTree.RecipientName }} · {{ $order.Braintree.BrainTree.Amount }}{{ $order.Braintree.BrainTree.CurrencyISOCode }} ({{ $formattedWiiNumber }})</option>
-                                {{ end }}
-                            </select>
-                            <div id="heightHelper" class="transition-all duration-500 relative">
-                                {{ range $order := .ActiveOrders }}
-                                <div id="{{ $order.WiiNumber }}"
-                                    class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
+
+                            <div class="pt-3 border-t border-gray-600">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300 text-lg">Total</span>
+                                    <span class="text-white font-bold text-2xl">{{
+                                        $order.Braintree.BrainTree.Amount }} <span class="text-lg font-medium">{{
+                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
+                                </div>
+                            </div>
+
+                            <div class="absolute bottom-0 left-0 right-0 h-2 overflow-hidden">
+                                <svg class="w-full h-2" viewBox="0 0 400 16" preserveAspectRatio="none">
+                                    <path
+                                        d="M0,16 L10,0 L20,16 L30,0 L40,16 L50,0 L60,16 L70,0 L80,16 L90,0 L100,16 L110,0 L120,16 L130,0 L140,16 L150,0 L160,16 L170,0 L180,16 L190,0 L200,16 L210,0 L220,16 L230,0 L240,16 L250,0 L260,16 L270,0 L280,16 L290,0 L300,16 L310,0 L320,16 L330,0 L340,16 L350,0 L360,16 L370,0 L380,16 L390,0 L400,16"
+                                        fill="rgb(31 41 55)"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        {{ end }}
+                    </div>
+                    <span id="PayPalLink" class="w-full">
+                        <button onclick="" disabled
+                            class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
+                                alt="Open External" class="w-5 h-5 mr-2 invert">
+                            Pay Now with PayPal
+                        </button>
+                    </span>
+                    {{ else }}
+                    <div
+                        class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
+                        <div class="flex items-center justify-start mb-6">
+                            <div class="p-3 bg-blue-600/20 rounded-full text-blue-400">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNyZWRpdC1jYXJkLWljb24gbHVjaWRlLWNyZWRpdC1jYXJkIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHg9IjIiIHk9IjUiIHJ4PSIyIi8+PGxpbmUgeDE9IjIiIHgyPSIyMiIgeTE9IjEwIiB5Mj0iMTAiLz48L3N2Zz4="
+                                    alt="Icon" class="w-10 h-10 invert" />
+                            </div>
+                        </div>
+                        <div class="text-left mb-3">
+                            <h2 class="text-xl font-bold text-white mb-6">Complete Payment</h2>
+
+                            <div id="heightHelper2" class="transition-all duration-500 relative">
+                                {{ range $id, $order := .ActiveOrders }}
+                                {{ if lt $id 1 }}
+                                <div id="singleSaleTicket"
+                                    class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         {{ $order.Braintree.BrainTree.RecipientName }}
 
@@ -43,8 +133,8 @@
                                                     <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
                                                     <span class="text-gray-200">{{ $item.Name }}</span>
                                                 </div>
-                                                <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
-                                                    }} {{
+                                                <span class="w-32 text-right text-white font-medium">{{
+                                                    $item.UnitAmount }} {{
                                                     $order.Braintree.BrainTree.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
@@ -80,238 +170,160 @@
                                     </div>
                                 </div>
                                 {{ end }}
-                            </div>
-                            <span id="PayPalLink" class="w-full">
-                                <button onclick="" disabled
-                                    class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
-                                        alt="Open External" class="w-5 h-5 mr-2 invert">
-                                    Pay Now with PayPal
-                                </button>
-                            </span>
-                            <div class="mt-4 text-sm text-gray-400">
-                                By proceeding, you agree to the Food Channel JustEat
-                                <a href="https://wiilink.ca/je/tos" target="_blank"
-                                    class="text-blue-400 hover:underline">Terms of Service</a> and
-                                <a href="https://wiilink.ca/je/privacy-policy" target="_blank"
-                                    class="text-blue-400 hover:underline">Privacy Policy</a>.
+                                {{ end }}
                             </div>
                         </div>
-                        {{ else }}
-                        <div
-                            class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
-                            <div class="flex items-center justify-start mb-6">
-                                <div class="p-3 bg-blue-600/20 rounded-full text-blue-400">
-                                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNyZWRpdC1jYXJkLWljb24gbHVjaWRlLWNyZWRpdC1jYXJkIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHg9IjIiIHk9IjUiIHJ4PSIyIi8+PGxpbmUgeDE9IjIiIHgyPSIyMiIgeTE9IjEwIiB5Mj0iMTAiLz48L3N2Zz4="
-                                        alt="Icon" class="w-10 h-10 invert" />
-                                </div>
-                            </div>
-                            <div class="text-left mb-3">
-                                <h2 class="text-xl font-bold text-white mb-6">Complete Payment</h2>
-
-                                <div id="heightHelper2" class="transition-all duration-500 relative">
-                                    {{ range $id, $order := .ActiveOrders }}
-                                    {{ if lt $id 1 }}
-                                    <div id="singleSaleTicket"
-                                        class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
-                                        <span class="flex flex-row justify-between text-xl font-semibold">
-                                            {{ $order.Braintree.BrainTree.RecipientName }}
-
-                                            <div class="text-right text-sm font-medium text-gray-300">
-                                                <div>{{ $order.Braintree.BrainTree.Line1 }}</div>
-                                                <div>{{ $order.Braintree.BrainTree.City }}, {{
-                                                    $order.Braintree.BrainTree.PostalCode }}</div>
-                                            </div>
-                                        </span>
-
-                                        <div class="pt-3 relative">
-                                            <div class="space-y-2 relative">
-                                                {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
-                                                {{ if lt $index 3 }}
-                                                <div
-                                                    class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
-                                                    <div class="flex items-start">
-                                                        <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
-                                                        <span class="text-gray-200">{{ $item.Name }}</span>
-                                                    </div>
-                                                    <span class="w-32 text-right text-white font-medium">{{
-                                                        $item.UnitAmount }} {{
-                                                        $order.Braintree.BrainTree.CurrencyISOCode }}</span>
-                                                </div>
-                                                {{ end }}
-                                                {{ end }}
-
-                                                {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
-                                                <div
-                                                    class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
-                                                </div>
-                                                <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                                    {{ len $order.Braintree.BrainTree.LineItems }} items
-                                                </div>
-                                                {{ end }}
-                                            </div>
-                                        </div>
-
-                                        <div class="pt-3 border-t border-gray-600">
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-gray-300 text-lg">Total</span>
-                                                <span class="text-white font-bold text-2xl">{{
-                                                    $order.Braintree.BrainTree.Amount }} <span
-                                                        class="text-lg font-medium">{{
-                                                        $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
-                                            </div>
-                                        </div>
-
-                                        <div class="absolute bottom-0 left-0 right-0 h-2 overflow-hidden">
-                                            <svg class="w-full h-2" viewBox="0 0 400 16" preserveAspectRatio="none">
-                                                <path
-                                                    d="M0,16 L10,0 L20,16 L30,0 L40,16 L50,0 L60,16 L70,0 L80,16 L90,0 L100,16 L110,0 L120,16 L130,0 L140,16 L150,0 L160,16 L170,0 L180,16 L190,0 L200,16 L210,0 L220,16 L230,0 L240,16 L250,0 L260,16 L270,0 L280,16 L290,0 L300,16 L310,0 L320,16 L330,0 L340,16 L350,0 L360,16 L370,0 L380,16 L390,0 L400,16"
-                                                    fill="rgb(31 41 55)"></path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    {{ end }}
-                                    {{ end }}
-                                </div>
-                            </div>
-                            <div class="flex justify-center">
-                                <button id="payment"
-                                    onclick="window.open('{{ (index .ActiveOrders 0).Braintree.Head.PaymentResource.RedirectURL }}'); openPane();"
-                                    class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                        </path>
-                                    </svg>
-                                    Pay Now with PayPal
-                                </button>
-                            </div>
-                            <div class="mt-4 text-sm text-gray-400">
-                                By proceeding, you agree to the Food Channel JustEat
-                                <a href="https://wiilink.ca/je/tos" target="_blank"
-                                    class="text-blue-400 hover:underline">Terms of Service</a> and
-                                <a href="https://wiilink.ca/je/privacy-policy" target="_blank"
-                                    class="text-blue-400 hover:underline">Privacy Policy</a>.
-                            </div>
-                        </div>
-                        {{ end }}
-                    </div>
-                    <div id="singleCancel" class="w-full">
-                        <button id="cancelSingle" onclick="cancelOrder('{{(index .ActiveOrders 0).HollywoodID}}')"
-                            class="w-full px-4 py-3 bg-red-600/50 hover:bg-red-600/60 text-red-400 rounded-xl transition duration-200 flex items-center justify-center text-base font-medium">
-                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Cancel Order
-                        </button>
-                    </div>
-                    <div id="finalizePane" class="relative group w-full hidden">
-                        <div
-                            class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
-                            <div class="text-center mb-6">
-                                <h3 class="text-lg font-semibold text-white mb-2">After Payment</h3>
-                                <p class="text-gray-300 text-sm">Once you've completed your payment, use the buttons
-                                    below to finalize or cancel your order</p>
-                            </div>
-
-                            <div class="space-y-3">
-                                <button id="done" onclick="done('{{(index .ActiveOrders 0).HollywoodID}}')"
-                                    class="w-full px-4 py-6 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Finalize Order
-                                </button>
-
-                                <button id="cancel" onclick="cancelOrder('{{(index .ActiveOrders 0).HollywoodID}}')"
-                                    class="w-full px-4 py-3 border-2 border-red-500 hover:bg-red-600/10 text-red-500 rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Cancel Order
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {{ else }}
-    <div
-        class="flex flex-col items-center justify-center mt-10 sm:mt-0 w-full md:ml-[300px] md:w-[calc(100%-300px)] min-h-screen xl:p-6">
-        <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center max-w-md w-full space-y-6">
-                <div class="relative group">
-                    <div
-                        class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
-                        <div class="flex items-center justify-center mb-6">
-                            <div class="p-3 bg-red-600/40 rounded-full">
-                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZS1hbGVydC1pY29uIGx1Y2lkZS1jaXJjbGUtYWxlcnQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PGxpbmUgeDE9IjEyIiB4Mj0iMTIiIHkxPSI4IiB5Mj0iMTIiLz48bGluZSB4MT0iMTIiIHgyPSIxMi4wMSIgeTE9IjE2IiB5Mj0iMTYiLz48L3N2Zz4="
-                                    alt="Icon" class="w-10 h-10 invert" />
-                            </div>
-                        </div>
-
-                        <div class="text-center mb-8">
-                            <h2 class="text-xl font-bold text-white mb-2">You have no pending orders</h2>
-                            <p class="text-gray-300">
-                                It seems you have no active orders to complete payment for. Please check back later or
-                                place a new order.
-                            </p>
-                        </div>
-
                         <div class="flex justify-center">
-                            <button id="payment" onclick="location.reload()"
+                            <button id="payment"
+                                onclick="window.open('{{ (index .ActiveOrders 0).Braintree.Head.PaymentResource.RedirectURL }}'); openPane();"
                                 class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZnJlc2gtY2N3LWljb24gbHVjaWRlLXJlZnJlc2gtY2N3Ij48cGF0aCBkPSJNMjEgMTJhOSA5IDAgMCAwLTktOSA5Ljc1IDkuNzUgMCAwIDAtNi43NCAyLjc0TDMgOCIvPjxwYXRoIGQ9Ik0zIDN2NWg1Ii8+PHBhdGggZD0iTTMgMTJhOSA5IDAgMCAwIDkgOSA5Ljc1IDkuNzUgMCAwIDAgNi43NC0yLjc0TDIxIDE2Ii8+PHBhdGggZD0iTTE2IDE2aDV2NSIvPjwvc3ZnPg=="
-                                    class="w-5 h-5 mr-2 invert">
-                                Reload the page
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                    </path>
+                                </svg>
+                                Pay Now with PayPal
                             </button>
                         </div>
+                        {{ end }}
+                        <div class="mt-4 text-sm text-gray-400">
+                            By proceeding, you agree to the Food Channel JustEat
+                            <a href="https://wiilink.ca/je/tos" target="_blank"
+                                class="text-blue-400 hover:underline">Terms of Service</a> and
+                            <a href="https://wiilink.ca/je/privacy-policy" target="_blank"
+                                class="text-blue-400 hover:underline">Privacy Policy</a>.
+                        </div>
+                    </div>
+                </div>
+                <div id="singleCancel" class="w-full">
+                    <button id="cancelSingle" onclick="cancelOrder('{{(index .ActiveOrders 0).HollywoodID}}')"
+                        class="w-full px-4 py-3 bg-red-600/50 hover:bg-red-600/60 text-red-400 rounded-xl transition duration-200 flex items-center justify-center text-base font-medium">
+                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Cancel Order
+                    </button>
+                </div>
+                <div id="finalizePane"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xl hidden">
+                    <div
+                        class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect max-w-md w-full mx-4">
+                        <div class="text-left mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">After Payment</h3>
+                            <p class="text-gray-300 text-sm">Once you've completed your payment, use the buttons
+                                below to finalize or cancel your order</p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <button id="done" onclick="done('{{(index .ActiveOrders 0).HollywoodID}}')"
+                                class="w-full px-4 py-6 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Finalize Order
+                            </button>
+
+                            <button id="cancel" onclick="cancelOrder('{{(index .ActiveOrders 0).HollywoodID}}')"
+                                class="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancel Order
+                            </button>
+
+                            <hr class="opacity-10 top-4 pt-6 relative">
+
+                            <p onclick="document.getElementById('finalizePane').classList.add('hidden')"
+                                class="text-white/60 hover:text-white flex flex-row items-center justify-center cursor-pointer">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Close this pane
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+{{ else }}
+<div
+    class="flex flex-col items-center justify-center mt-10 sm:mt-0 w-full md:ml-[300px] md:w-[calc(100%-300px)] min-h-screen xl:p-6">
+    <div class="flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center max-w-md w-full space-y-6">
+            <div class="relative group">
+                <div
+                    class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect">
+                    <div class="flex items-center justify-start mb-6">
+                        <div class="p-3 bg-red-600/40 rounded-full">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZS1hbGVydC1pY29uIGx1Y2lkZS1jaXJjbGUtYWxlcnQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PGxpbmUgeDE9IjEyIiB4Mj0iMTIiIHkxPSI4IiB5Mj0iMTIiLz48bGluZSB4MT0iMTIiIHgyPSIxMi4wMSIgeTE9IjE2IiB5Mj0iMTYiLz48L3N2Zz4="
+                                alt="Icon" class="w-10 h-10 invert" />
+                        </div>
+                    </div>
+
+                    <div class="text-left mb-8">
+                        <h2 class="text-xl font-bold text-white mb-2">You have no pending orders</h2>
+                        <p class="text-gray-300">
+                            It seems you have no active orders to complete payment for. Please check back later or
+                            place a new order.
+                        </p>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button id="payment" onclick="location.reload()"
+                            class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZnJlc2gtY2N3LWljb24gbHVjaWRlLXJlZnJlc2gtY2N3Ij48cGF0aCBkPSJNMjEgMTJhOSA5IDAgMCAwLTktOSA5Ljc1IDkuNzUgMCAwIDAtNi43NCAyLjc0TDMgOCIvPjxwYXRoIGQ9Ik0zIDN2NWg1Ii8+PHBhdGggZD0iTTMgMTJhOSA5IDAgMCAwIDkgOSA5Ljc1IDkuNzUgMCAwIDAgNi43NC0yLjc0TDIxIDE2Ii8+PHBhdGggZD0iTTE2IDE2aDV2NSIvPjwvc3ZnPg=="
+                                class="w-5 h-5 mr-2 invert">
+                            Reload the page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {{ end }}
+</div>
+</div>
+{{ end }}
 
-    <script>
-        // To make the receipt animation work, I actually need to set a container height beforehand, then once it ends I can set it to the height of the receipt.
-        function heightHelper() {
-            const heightHelper = document.getElementById("heightHelper2");
-            const singleSaleTicket = document.getElementById("singleSaleTicket");
-            heightHelper.style.height = "0px";
-            setTimeout(() => {
-                heightHelper.style.height = "340px";
-            }, 10);
-            setTimeout(() => {
-                if (singleSaleTicket) {
-                    heightHelper.classList.remove("animate-grow");
-                    heightHelper.style.height = (singleSaleTicket.offsetHeight + 10) + "px";
-                }
-            }, 1400);
-        }
-        window.addEventListener("load", heightHelper);
+<script>
+    // To make the receipt animation work, I actually need to set a container height beforehand, then once it ends I can set it to the height of the receipt.
+    function heightHelper() {
+        const heightHelper = document.getElementById("heightHelper2");
+        const singleSaleTicket = document.getElementById("singleSaleTicket");
+        heightHelper.style.height = "0px";
+        setTimeout(() => {
+            heightHelper.style.height = "340px";
+        }, 10);
+        setTimeout(() => {
+            if (singleSaleTicket) {
+                heightHelper.classList.remove("animate-grow");
+                heightHelper.style.height = (singleSaleTicket.offsetHeight + 10) + "px";
+            }
+        }, 1400);
+    }
+    window.addEventListener("load", heightHelper);
 
-        // Send a POST request to /finalize with the hollywood in the POST form.
-        async function done(hollywoodId) {
-            const button = document.getElementById("done");
-            button.innerHTML = `
+    // Send a POST request to /finalize with the hollywood in the POST form.
+    async function done(hollywoodId) {
+        const button = document.getElementById("done");
+        button.innerHTML = `
                 <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Finalizing...
             `;
-            button.disabled = true;
+        button.disabled = true;
 
-            const formData = new URLSearchParams();
-            formData.append("hollywood_id", hollywoodId);
+        const formData = new URLSearchParams();
+        formData.append("hollywood_id", hollywoodId);
 
+        try {
             await fetch("/finalize", {
                 method: "POST",
                 credentials: "same-origin",
@@ -319,82 +331,93 @@
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
                 body: formData
-            }).then(() => {
-                button.innerHTML = `
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M5 13l4 4L19 7"></path>
-                </svg>
-                Finalized
-            `;
-                button.disabled = false;
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            }).catch((error) => {
-                console.error("Error finalizing order:", error);
-                button.innerHTML = `
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Error Finalizing, check console
-            `;
-                button.disabled = false;
             });
+
+            button.innerHTML = `
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Finalized
+                `;
+            button.disabled = false;
+
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } catch (error) {
+            console.error("Error finalizing order:", error);
+            button.innerHTML = `
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Error Finalizing, check console
+                `;
+            button.disabled = false;
+        }
+    }
+
+    // Send a POST request to /cancel with the hollywood in the POST form.
+    async function cancelOrder(hollywoodId) {
+        if (!confirm('Are you sure you want to cancel this order?')) return;
+
+        let button = document.getElementById("cancel");
+        if (!button) {
+            button = document.getElementById("cancelSingle");
         }
 
-        // Send a POST request to /cancel with the hollywood in the POST form.
-        async function cancelOrder(hollywoodId) {
-            if (confirm('Are you sure you want to cancel this order?')) {
-                let button = document.getElementById("cancel");
-                if (!button) {
-                    button = document.getElementById("cancelSingle");
-                }
-                button.innerHTML = `
-                    <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Cancelling...
-                `;
-                button.disabled = true;
-
-                const formData = new URLSearchParams();
-                formData.append("hollywood_id", hollywoodId);
-
-                await fetch("/cancel", {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: formData
-                });
-
-                button.innerHTML = `
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"></path>
+        button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 718-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                Cancelling...
+            `;
+        button.disabled = true;
+
+        const formData = new URLSearchParams();
+        formData.append("hollywood_id", hollywoodId);
+
+        try {
+            await fetch("/cancel", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: formData
+            });
+
+            button.innerHTML = `
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                     Cancelled
                 `;
 
-                location.reload();
-            }
+            location.reload();
+        } catch (error) {
+            console.error("Error cancelling order:", error);
+            button.innerHTML = `
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Error Cancelling, check logs
+                `;
+            button.disabled = false;
         }
+    }
 
-        // Handle multiple orders selection
-        document.getElementById("orderSelect").addEventListener("change", function () {
-            const selectedValue = this.value;
-            if (selectedValue) {
-                const selectedOrder = {{ .ActiveOrders }}.find(order => order.WiiNumber === selectedValue);
-                document.getElementById("done").setAttribute("onclick", `done('${selectedOrder.HollywoodID}')`);
-                document.getElementById("cancel").setAttribute("onclick", `cancelOrder('${selectedOrder.HollywoodID}')`);
-                console.log("Selected Order:", selectedOrder);
-            if (selectedOrder) {
-                const formattedWiiNumber = selectedOrder.WiiNumber.match(/.{1,4}/g).join("-");
-                const PayPayHtml = `
+    // Handle multiple orders selection
+    document.getElementById("orderSelect").addEventListener("change", function () {
+        const selectedValue = this.value;
+        if (selectedValue) {
+            const selectedOrder = {{ .ActiveOrders }}.find(order => order.WiiNumber === selectedValue);
+        document.getElementById("done").setAttribute("onclick", `done('${selectedOrder.HollywoodID}')`);
+        document.getElementById("cancel").setAttribute("onclick", `cancelOrder('${selectedOrder.HollywoodID}')`);
+
+        if (selectedOrder) {
+            const formattedWiiNumber = selectedOrder.WiiNumber.match(/.{1,4}/g).join("-");
+            const PayPayHtml = `
                         <button onclick="window.open('${selectedOrder.Braintree.head.paymentResource.redirectUrl}'); openPane();"
                             class="mt-3 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
@@ -402,37 +425,37 @@
                             Pay Now with PayPal
                         </button>
                     `;
-                document.getElementById("PayPalLink").innerHTML = PayPayHtml;
+            document.getElementById("PayPalLink").innerHTML = PayPayHtml;
 
-                // Show the selected order details
-                document.querySelectorAll(".w-full.my-4.p-4.bg-slate-700.rounded-t-lg.text-white.space-y-4").forEach(el => {
-                    el.classList.remove("animate-opacity");
-                    el.classList.add("animate-opacity-out");
-                    setTimeout(() => {
-                        el.classList.add("hidden");
-                    }, 500);
-                });
-                const orderDetails = document.getElementById(selectedOrder.WiiNumber);
-                if (orderDetails) {
-                    document.getElementById("heightHelper").style.height = "340px";
-                    orderDetails.classList.remove("animate-opacity-out");
-                    orderDetails.classList.add("animate-opacity");
-                    setTimeout(() => {
-                        orderDetails.classList.remove("hidden");
-                    }, 500);
-                    setTimeout(() => {
-                        document.getElementById("heightHelper").style.height = (orderDetails.offsetHeight + 30) + "px";
-                    }, 1000);
-                }
+            // Show the selected order details
+            document.querySelectorAll(".w-full.my-4.p-4.bg-slate-700.rounded-t-lg.text-white.space-y-4").forEach(el => {
+                el.classList.remove("animate-opacity");
+                el.classList.add("animate-opacity-out");
+                setTimeout(() => {
+                    el.classList.add("hidden");
+                }, 500);
+            });
+            const orderDetails = document.getElementById(selectedOrder.WiiNumber);
+            if (orderDetails) {
+                document.getElementById("heightHelper").style.height = "340px";
+                orderDetails.classList.remove("animate-opacity-out");
+                orderDetails.classList.add("animate-opacity");
+                setTimeout(() => {
+                    orderDetails.classList.remove("hidden");
+                }, 500);
+                setTimeout(() => {
+                    document.getElementById("heightHelper").style.height = (orderDetails.offsetHeight + 30) + "px";
+                }, 1000);
             }
         }
+    }
         });
 
-        // Show the finalize pane when the PayPal button is clicked
-        function openPane() {
-            document.getElementById("finalizePane").classList.remove("hidden");
-            document.getElementById("singleCancel").classList.add("hidden");
-        }
-    </script>
+    // Show the finalize pane when the PayPal button is clicked
+    function openPane() {
+        document.getElementById("finalizePane").classList.remove("hidden");
+        document.getElementById("singleCancel").classList.add("hidden");
+    }
+</script>
 
 {{ template "footer.html" }}
