@@ -310,7 +310,7 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 
 	return &demae.ShopOne{
 		CategoryCode:  demae.CDATA{Value: "01"},
-		Address:       demae.CDATA{Value: rest.RestaurantInfo.Location.Address},
+		Address:       demae.CDATA{Value: "None"}, // rest.RestaurantInfo.Location.Address
 		Information:   demae.CDATA{Value: demae.Wordwrap(rest.RestaurantInfo.Description, 24, 16)},
 		Attention:     demae.CDATA{Value: "None"},
 		Amenity:       demae.CDATA{Value: deals},
