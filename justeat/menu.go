@@ -346,6 +346,12 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 		// before proceeding as the deal which we select impacts all modifiers.
 		// We are guaranteed one "variation" as well as one "DealGroupId"
 		variation := item.Variations[0]
+
+		// We cannot support multiple DealGroups as it has a level of depth Demae does not allow.
+		if len(variation.DealGroupsIds) > 1 {
+			return nil
+		}
+
 		for _, group := range modifiers.DealGroups {
 			if slices.Contains(variation.DealGroupsIds, group.Id) {
 				// We can use this deal.
