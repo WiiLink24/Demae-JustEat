@@ -16,6 +16,7 @@ COPY *.go ./
 COPY demae demae
 COPY justeat justeat
 COPY skip skip
+COPY logger logger
 
 # Build to name "app".
 RUN go build -o app .
