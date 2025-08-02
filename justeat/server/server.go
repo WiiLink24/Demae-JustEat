@@ -56,7 +56,7 @@ func RunServer(config *demae.Config) {
 	defer pool.Close()
 
 	// Set up HTTP
-	if config.IsProd {
+	if config.IsDebug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"io"
 	"net/http"
 	"net/url"
@@ -106,6 +107,7 @@ func (j *JEClient) makePaypalURL(config *BrainTreeConfig, brainTree BrainTreeCre
 	}
 
 	if resp.StatusCode != http.StatusCreated {
+		logger.Debug(OrderModule, string(data))
 		return nil, PaypalURLFailed
 	}
 

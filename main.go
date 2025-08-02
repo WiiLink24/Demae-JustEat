@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat/server"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/remizovm/geonames"
@@ -48,6 +49,8 @@ func main() {
 	})
 	checkError(err)
 	defer sentry.Flush(2 * time.Second)
+
+	logger.SetDebug(config.IsDebug)
 
 	// Initialize database
 	dbString := fmt.Sprintf("postgres://%s:%s@%s/%s", config.SQLUser, config.SQLPass, config.SQLAddress, config.SQLDB)

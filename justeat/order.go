@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+const OrderModule = "ORDER"
 
 func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 	storeId := r.PostForm.Get("shop[ShopCode]")
@@ -232,6 +235,7 @@ func (j *JEClient) prepareCheckout(basketId string, patches ...CheckoutPatch) (t
 	}
 
 	if !payload["isFulfillable"].(bool) {
+		logger.Debug(OrderModule, payload)
 		return 0, NotFulfillable
 	}
 

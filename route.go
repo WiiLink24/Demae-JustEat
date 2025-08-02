@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/getsentry/sentry-go"
 	"net/http"
 	"strings"
@@ -65,9 +65,7 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 
 func (r *Route) Handle() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if !config.IsProd {
-			fmt.Println(req.URL.String())
-		}
+		logger.Debug("HTTP", req.Method, req.URL.String())
 
 		// If this is a POST request it is either an actual request or an error.
 		var actionName string

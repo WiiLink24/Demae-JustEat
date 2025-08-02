@@ -27,7 +27,7 @@ type Config struct {
 	OrderWebhook   string     `xml:"OrderWebhook"`
 	SentryDSN      string     `xml:"SentryDSN"`
 	OIDCConfig     OIDCConfig `xml:"oidc"`
-	IsProd         bool       `xml:"IsProd"`
+	IsDebug        bool       `xml:"IsDebug"`
 }
 
 type AppAuthConfig struct {
