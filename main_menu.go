@@ -29,7 +29,7 @@ func documentTemplate(r *Response) {
 }
 
 func categoryList(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return

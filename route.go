@@ -64,7 +64,7 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 }
 
 func (r *Route) Handle() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	return sentryHandler.HandleFunc(func(w http.ResponseWriter, req *http.Request) {
 		logger.Debug("HTTP", req.Method, req.URL.String())
 
 		// If this is a POST request it is either an actual request or an error.

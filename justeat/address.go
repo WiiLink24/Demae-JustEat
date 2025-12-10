@@ -2,6 +2,7 @@ package justeat
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -30,6 +31,10 @@ func (j *JEClient) getGeocodedAddress() (long float64, lat float64, city string,
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return 0, 0, "", err
+	}
+
+	if data["errors"] != nil {
+		return 0, 0, "", errors.New(data["errors"].([]any)[0].(map[string]any)["description"].(string))
 	}
 
 	long = data["geometry"].(map[string]any)["coordinates"].([]any)[0].(float64)

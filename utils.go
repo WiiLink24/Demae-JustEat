@@ -183,20 +183,17 @@ func PostDiscordWebhook(title, message, url string, color int) {
 // ReportError helps make errors nicer. First it logs the error to Sentry,
 // then writes a response for the server to send.
 func (r *Response) ReportError(err error) {
-	/*if !errors.Is(err, dominos.InvalidCountry) && r.dominos != nil {
-		// Write the JSON Dominos sent us to the system.
-		_ = os.WriteFile(fmt.Sprintf("errors/%s_%s.json", r.request.URL.Path, r.request.Header.Get("X-WiiNo")), r.dominos.GetResponse(), 0664)
-	}*/
-
-	sentry.WithScope(func(s *sentry.Scope) {
-		s.SetTag("Wii ID", r.GetHollywoodId())
-		sentry.CaptureException(err)
-	})
+	if hub := sentry.GetHubFromContext(r.request.Context()); hub != nil {
+		hub.WithScope(func(s *sentry.Scope) {
+			s.SetTag("Wii ID", r.GetHollywoodId())
+			hub.CaptureException(err)
+		})
+	}
 
 	log.Printf("An error has occurred: %s", aurora.Red(err.Error()))
 
 	errorString := fmt.Sprintf("%s\nWii ID: %s\nWii Number: %s", err.Error(), r.GetHollywoodId(), r.request.Header.Get("X-WiiNo"))
-	PostDiscordWebhook("An error has occurred in Demae Domino's!", errorString, config.ErrorWebhook, 16711711)
+	PostDiscordWebhook("An error has occurred in Demae Just Eat!", errorString, config.ErrorWebhook, 16711711)
 
 	// With the new patches I created, we can now send the error to the channel.
 	r.AddKVNode("error", err.Error())

@@ -115,6 +115,9 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 		return err
 	}
 
+	// Contrary to the basket's total field, it is not actually the total.
+	// We have to manually sum all products and fees.
+	paymentTotal := 0.0
 	var receiptItems []BrainTreeItem
 	for _, item := range basket.BasketSummary.Products {
 		receiptItems = append(receiptItems, BrainTreeItem{
@@ -123,6 +126,20 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			Quantity:   strconv.Itoa(item.Quantity),
 			UnitAmount: demae.FloatToString(item.UnitPrice),
 		})
+
+		paymentTotal += item.UnitPrice
+	}
+
+	// Deals
+	for _, deal := range basket.BasketSummary.Deals {
+		receiptItems = append(receiptItems, BrainTreeItem{
+			Kind:       "debit",
+			Name:       deal.Name,
+			Quantity:   strconv.Itoa(deal.Quantity),
+			UnitAmount: demae.FloatToString(deal.UnitPrice),
+		})
+
+		paymentTotal += deal.UnitPrice
 	}
 
 	// Per giustino:
@@ -140,6 +157,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			adj.UnitAmount = strings.Replace(s, "-", "", -1)
 		} else {
 			adj.UnitAmount = demae.FloatToString(adjustment.Adjustment.(float64))
+			paymentTotal += adjustment.Adjustment.(float64)
 		}
 
 		receiptItems = append(receiptItems, adj)
@@ -152,6 +170,8 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			Quantity:   "1",
 			UnitAmount: demae.FloatToString(basket.BasketSummary.DeliveryCharge),
 		})
+
+		paymentTotal += basket.BasketSummary.DeliveryCharge
 	}
 
 	// Get the payment URL.
@@ -160,7 +180,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 		CancelURL:                "customer-details-oneapp.braintree://onetouch/v1/cancel",
 		OfferPayLater:            false,
 		AuthorizationFingerprint: config.AuthFingerprint,
-		Amount:                   demae.FloatToString(basket.BasketSummary.BasketTotals.Total),
+		Amount:                   demae.FloatToString(paymentTotal),
 		CurrencyISOCode:          config.Paypal.CurrencyCode,
 		Intent:                   "authorize",
 		LineItems:                receiptItems,

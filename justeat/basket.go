@@ -38,8 +38,16 @@ func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
 	return menu.MenuGroupId, nil
 }
 
-func formProduct(r *http.Request, itemCode string, quantity int) (*Product, error) {
+func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (*Product, error) {
+	type ModifierPreAdd struct {
+		GroupId    string
+		ModifierId string
+		Quantity   int
+	}
+
+	modifierMap := make(map[string]ModifierPreAdd)
 	var modifierGroups []ModifierGroup
+	var err error
 	for items, _ := range r.PostForm {
 		if strings.Contains(items, "option") {
 			// Extract the topping type and code
@@ -51,32 +59,61 @@ func formProduct(r *http.Request, itemCode string, quantity int) (*Product, erro
 					continue
 				case 1:
 					// Modifier ID
-					groupID = demae.DecompressUUID(strings.Split(s, "]")[0])
+					groupID, err = j.GetKey(strings.Split(s, "]")[0])
+					if err != nil {
+						return nil, err
+					}
 				case 2:
 					// Modifier Group ID
-					modifierID = demae.DecompressUUID(strings.Split(s, "]")[0])
+					// Can be possible to have duplicates of a modifier. In this case we want to increment the quantity.
+					isDupe := false
+					notModifiedId := strings.Split(s, "]")[0]
+					if notModifiedId[len(notModifiedId)-2] == '_' {
+						// We got one. We should also strip the suffix.
+						notModifiedId = notModifiedId[:len(notModifiedId)-2]
+						isDupe = true
+					}
+
+					modifierID, err = j.GetKey(notModifiedId)
+					if err != nil {
+						return nil, err
+					}
+
+					if isDupe {
+						if m, ok := modifierMap[modifierID]; ok {
+							m.Quantity++
+						} else {
+							modifierMap[modifierID] = ModifierPreAdd{
+								GroupId:    groupID,
+								ModifierId: modifierID,
+								Quantity:   1,
+							}
+						}
+					}
 				}
 			}
+		}
+	}
 
-			item := Modifier{
-				ID:       modifierID,
-				Quantity: 1,
-			}
+	for _, add := range modifierMap {
+		item := Modifier{
+			ID:       add.ModifierId,
+			Quantity: add.Quantity,
+		}
 
-			// Find group if it exists
-			idx := slices.IndexFunc(modifierGroups, func(group ModifierGroup) bool {
-				return group.GroupId == groupID
+		// Find group if it exists
+		idx := slices.IndexFunc(modifierGroups, func(group ModifierGroup) bool {
+			return group.GroupId == add.GroupId
+		})
+
+		if idx == -1 {
+			// Not found, create.
+			modifierGroups = append(modifierGroups, ModifierGroup{
+				GroupId:   add.GroupId,
+				Modifiers: []Modifier{item},
 			})
-
-			if idx == -1 {
-				// Not found, create.
-				modifierGroups = append(modifierGroups, ModifierGroup{
-					GroupId:   groupID,
-					Modifiers: []Modifier{item},
-				})
-			} else {
-				modifierGroups[idx].Modifiers = append(modifierGroups[idx].Modifiers, item)
-			}
+		} else {
+			modifierGroups[idx].Modifiers = append(modifierGroups[idx].Modifiers, item)
 		}
 	}
 
@@ -91,22 +128,14 @@ func formProduct(r *http.Request, itemCode string, quantity int) (*Product, erro
 	return &product, nil
 }
 
-func (j *JEClient) formDealProduct(r *http.Request) (*Deal, error) {
-	itemCode := r.PostForm.Get("itemCode")
-	quantityStr := r.PostForm.Get("quantity")
-
-	quantity, err := strconv.Atoi(quantityStr)
-	if err != nil {
-		return nil, err
-	}
-
+func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity int) (*Deal, error) {
 	// Split itemCode into it's parts.
 	itemCodes := strings.Split(itemCode, "|")
 	dealId := itemCodes[0]
-	itemId := demae.DecompressUUID(itemCodes[1])
-	modifierId := demae.DecompressUUID(itemCodes[2])
+	itemId := itemCodes[1]
+	modifierId := itemCodes[2]
 
-	product, err := formProduct(r, modifierId, quantity)
+	product, err := j.formProduct(r, modifierId, quantity)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +167,11 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 	}
 
 	itemCode := r.PostForm.Get("itemCode")
+	itemCode, err = j.GetKey(itemCode)
+	if err != nil {
+		return "", err
+	}
+
 	quantityStr := r.PostForm.Get("quantity")
 
 	quantity, err := strconv.Atoi(quantityStr)
@@ -149,14 +183,14 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 	var deals []Deal
 	itemCodes := strings.Split(itemCode, "|")
 	if len(itemCodes) == 3 {
-		deal, err := j.formDealProduct(r)
+		deal, err := j.formDealProduct(r, itemCode, quantity)
 		if err != nil {
 			return "", err
 		}
 
 		deals = append(deals, *deal)
 	} else {
-		product, err := formProduct(r, demae.DecompressUUID(itemCode), quantity)
+		product, err := j.formProduct(r, itemCode, quantity)
 		if err != nil {
 			return "", err
 		}
@@ -241,7 +275,13 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 }
 
 func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
-	itemCode := demae.DecompressUUID(r.PostForm.Get("itemCode"))
+	var err error
+	itemCode := r.PostForm.Get("itemCode")
+	itemCode, err = j.GetKey(itemCode)
+	if err != nil {
+		return err
+	}
+
 	quantityStr := r.PostForm.Get("quantity")
 
 	quantity, err := strconv.Atoi(quantityStr)
@@ -253,14 +293,14 @@ func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
 	var deals []Deal
 	itemCodes := strings.Split(itemCode, "|")
 	if len(itemCodes) == 3 {
-		deal, err := j.formDealProduct(r)
+		deal, err := j.formDealProduct(r, itemCode, quantity)
 		if err != nil {
 			return err
 		}
 
 		deals = append(deals, *deal)
 	} else {
-		product, err := formProduct(r, itemCode, quantity)
+		product, err := j.formProduct(r, itemCode, quantity)
 		if err != nil {
 			return err
 		}

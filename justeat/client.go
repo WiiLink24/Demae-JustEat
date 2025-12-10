@@ -8,6 +8,7 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"io"
 	"net/http"
 	"net/url"
@@ -43,10 +44,11 @@ type JEClient struct {
 	WiiID        string
 	DeviceModel  string
 	Db           *pgxpool.Pool
+	rdb          *redis.Client
 }
 
 // NewClient constructs either an instance of JEClient or skip.Client.
-func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywoodID string) (Client, error) {
+func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywoodID string, rdb *redis.Client) (Client, error) {
 	// TODO: Canada detection.
 	country, err := GetCountry(req.Header.Get("X-WiiCountryCode"))
 	if err != nil {
@@ -63,6 +65,7 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 		PostalCode:   req.Header.Get("X-PostalCode"),
 		WiiID:        hollywoodID,
 		Db:           db,
+		rdb:          rdb,
 	}
 
 	err = client.SetAuth()

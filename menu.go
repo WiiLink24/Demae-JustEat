@@ -7,7 +7,7 @@ import (
 )
 
 func menuList(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -27,7 +27,7 @@ func menuList(r *Response) {
 }
 
 func itemList(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -52,7 +52,7 @@ func itemList(r *Response) {
 }
 
 func itemOne(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return

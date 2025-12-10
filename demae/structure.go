@@ -28,6 +28,8 @@ type Config struct {
 	SentryDSN      string     `xml:"SentryDSN"`
 	OIDCConfig     OIDCConfig `xml:"oidc"`
 	IsDebug        bool       `xml:"IsDebug"`
+	RedisAddress   string     `xml:"RedisAddress"`
+	RedisPassword  string     `xml:"RedisPassword"`
 }
 
 type AppAuthConfig struct {

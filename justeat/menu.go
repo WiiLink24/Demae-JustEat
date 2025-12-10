@@ -163,7 +163,11 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 				}
 
 				// Download image and process item.
-				itemObj := j.getItem(item, id, category.Id, modifiers, items, i, soldOutItems, RecommendedNameLength)
+				itemObj, err := j.getItem(item, id, category.Id, modifiers, items, i, soldOutItems, RecommendedNameLength)
+				if err != nil {
+					return nil, err
+				}
+
 				if itemObj == nil {
 					continue
 				}
@@ -314,7 +318,11 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	i := 0
 	for _, _item := range items.Items {
 		if slices.Contains(category.ItemIds, _item.Id) {
-			itemObj := j.getItem(_item, shopID, categoryID, modifiers, items, i, soldOutItems, NormalNameLength)
+			itemObj, err := j.getItem(_item, shopID, categoryID, modifiers, items, i, soldOutItems, NormalNameLength)
+			if err != nil {
+				return nil, err
+			}
+
 			if itemObj == nil {
 				continue
 			}
@@ -327,10 +335,28 @@ func (j *JEClient) GetMenuItems(shopID, categoryID string) ([]demae.NestedItem, 
 	return retItems, nil
 }
 
-func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string, nameWrapLen uint) *demae.NestedItem {
-	imageId := demae.CompressUUID(item.Id)
+func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifiers *Modifiers, items Items, idx int, soldOutItems []string, nameWrapLen uint) (*demae.NestedItem, error) {
+	// Demae has a limit of 31 characters for the item ID. As most observed IDs were UUID, a solution was to strip
+	// the dashes and convert from hex to string then base64 encode. However, some IDs were observed to not be RFC
+	// compliant UUIDs leading to this solution not being universal. The chosen solution I have is to generate a UUID
+	// for an item and store it in Redis with the provided item ID as a key.
+	var err error
+	itemId := demae.CompressUUID(demae.UUID())
+	if j.KeyExists(item.Id) {
+		itemId, err = j.GetKey(item.Id)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = j.SetKey(item.Id, itemId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	imageId := itemId
 	if len(item.ImageSources) != 0 {
-		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, item.Id)
+		j.DownloadFoodImage(item.ImageSources[0].Path, shopID, itemId)
 	} else {
 		imageId = "non"
 	}
@@ -349,7 +375,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 
 		// We cannot support multiple DealGroups as it has a level of depth Demae does not allow.
 		if len(variation.DealGroupsIds) > 1 {
-			return nil
+			return nil, nil
 		}
 
 		for _, group := range modifiers.DealGroups {
@@ -365,14 +391,28 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 						continue
 					}
 
+					// Demae does not give us the parent item ID even though we have to supply it.
+					// We also need the Deal ID for when we add to basket.
+					// Therefore, we use this format for the item code:
+					// dealID|itemID|modifierID
 					curItemVar := items.Items[idx]
+					dealItemCode := group.Id + "|" + item.Id + "|" + curItemVar.Id
+					dealItemCodeForDemae := demae.CompressUUID(demae.UUID())
+					if j.KeyExists(dealItemCode) {
+						dealItemCodeForDemae, err = j.GetKey(dealItemCode)
+						if err != nil {
+							return nil, err
+						}
+					} else {
+						err = j.SetKey(dealItemCode, dealItemCodeForDemae)
+						if err != nil {
+							return nil, err
+						}
+					}
+
 					variations = append(variations, demae.ItemSize{
-						XMLName: xml.Name{Local: fmt.Sprintf("item%d", i)},
-						// Demae does not give us the parent item ID even though we have to supply it.
-						// We also need the Deal ID for when we add to basket.
-						// Therefore, we use this format for the item code:
-						// dealID|itemID|modifierID
-						ItemCode:  demae.CDATA{Value: group.Id + "|" + demae.CompressUUID(item.Id) + "|" + demae.CompressUUID(curItemVar.Id)},
+						XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
+						ItemCode:  demae.CDATA{Value: dealItemCodeForDemae},
 						Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(curItemVar.Name), 21, 2)},
 						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
 						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id) || slices.Contains(soldOutItems, item.Id))},
@@ -387,9 +427,22 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 				name = item.Name
 			}
 
+			itemCode := demae.CompressUUID(demae.UUID())
+			if j.KeyExists(variation.Id) {
+				itemCode, err = j.GetKey(variation.Id)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				err = j.SetKey(variation.Id, itemCode)
+				if err != nil {
+					return nil, err
+				}
+			}
+
 			variations = append(variations, demae.ItemSize{
 				XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-				ItemCode:  demae.CDATA{Value: demae.CompressUUID(variation.Id)},
+				ItemCode:  demae.CDATA{Value: itemCode},
 				Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(name), 21, 2)},
 				Price:     demae.CDATA{Value: variation.BasePrice},
 				IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id) || slices.Contains(soldOutItems, item.Id))},
@@ -398,7 +451,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 	}
 
 	if len(variations) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	return &demae.NestedItem{
@@ -407,7 +460,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 		Item: demae.Item{
 			XMLName:    xml.Name{Local: "item"},
 			MenuCode:   demae.CDATA{Value: categoryID},
-			ItemCode:   demae.CDATA{Value: demae.CompressUUID(item.Id)},
+			ItemCode:   demae.CDATA{Value: itemId},
 			Name:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), nameWrapLen, -1)},
 			Price:      demae.CDATA{Value: 0},
 			Info:       demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Description), 36, 3)},
@@ -420,7 +473,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 				Value:   []any{variations[:]},
 			},
 		},
-	}
+	}, nil
 }
 
 func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.ItemOne, float64, error) {
@@ -461,21 +514,24 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	}
 
 	// Determine if this is a deal product.
-	itemIDs := strings.Split(itemCode, "|")
+	justEatItemCode, err := j.GetKey(itemCode)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	itemIDs := strings.Split(justEatItemCode, "|")
 	if len(itemIDs) == 3 {
 		// We need the modifier code.
-		itemCode = demae.DecompressUUID(itemIDs[2])
-	} else {
-		itemCode = demae.DecompressUUID(itemCode)
+		justEatItemCode = itemIDs[2]
 	}
 
 	var variation Variation
 	for _, _item := range items.Items {
 		// Find item
-		if strings.Contains(itemCode, _item.Id) {
+		if strings.Contains(justEatItemCode, _item.Id) {
 			// Find correct variation
 			idx := slices.IndexFunc(_item.Variations, func(_var Variation) bool {
-				return _var.Id == itemCode
+				return _var.Id == justEatItemCode
 			})
 
 			variation = _item.Variations[idx]
@@ -491,41 +547,127 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	}
 
 	var itemModifiers []demae.ItemOne
-	for i, group := range modifiers.ModifierGroups {
+	var idx int
+	for _, group := range modifiers.ModifierGroups {
 		if slices.Contains(variation.ModifierGroupsIds, group.Id) {
-			buttonType := "box"
-			if group.MaxChoices == group.MinChoices {
-				buttonType = "radio"
-			}
-
-			parent := demae.ItemOne{
-				XMLName: xml.Name{Local: fmt.Sprintf("container%d", i)},
-				Info:    demae.CDATA{Value: fmt.Sprintf("Max item selection is %d, minimum %d", group.MaxChoices, group.MinChoices)},
-				Code:    demae.CDATA{Value: demae.CompressUUID(group.Id)},
-				Type:    demae.CDATA{Value: buttonType},
-				Name:    demae.CDATA{Value: group.Name},
-				List: demae.KVFieldWChildren{
-					XMLName: xml.Name{Local: "list"},
-				},
-			}
-
-			for _, set := range modifiers.ModifierSets {
-				if slices.Contains(group.Modifiers, set.Id) {
-					parent.List.Value = append(parent.List.Value, demae.Item{
-						MenuCode:  demae.CDATA{Value: demae.CompressUUID(group.Id)},
-						ItemCode:  demae.CDATA{Value: demae.CompressUUID(set.Modifier.Id)},
-						Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
-						Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
-						Info:      demae.CDATA{Value: "None yet"},
-						Size:      nil,
-						Image:     demae.CDATA{Value: "non"},
-						IsSoldout: demae.CDATA{Value: 0},
-						SizeList:  nil,
-					})
+			// Save group ID to Redis
+			groupId := demae.CompressUUID(demae.UUID())
+			if j.KeyExists(group.Id) {
+				groupId, err = j.GetKey(group.Id)
+				if err != nil {
+					return nil, 0, err
+				}
+			} else {
+				err = j.SetKey(group.Id, groupId)
+				if err != nil {
+					return nil, 0, err
 				}
 			}
 
-			itemModifiers = append(itemModifiers, parent)
+			buttonType := "box"
+			if group.MaxChoices == group.MinChoices {
+				// In such a case we need a singular menu for each, as Demae does not allow for multiple selections
+				// of mandatory items.
+				buttonType = "radio"
+
+				var modifierList []any
+				for _, set := range modifiers.ModifierSets {
+					if slices.Contains(group.Modifiers, set.Id) {
+						// Save the item code to Redis.
+						modifierId := demae.CompressUUID(demae.UUID())
+						if j.KeyExists(set.Modifier.Id) {
+							modifierId, err = j.GetKey(set.Modifier.Id)
+							if err != nil {
+								return nil, 0, err
+							}
+						} else {
+							err = j.SetKey(set.Modifier.Id, modifierId)
+							if err != nil {
+								return nil, 0, err
+							}
+						}
+
+						modifierList = append(modifierList, &demae.Item{
+							MenuCode:  demae.CDATA{Value: groupId},
+							ItemCode:  demae.CDATA{Value: modifierId},
+							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
+							Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
+							Info:      demae.CDATA{Value: "None yet"},
+							Size:      nil,
+							Image:     demae.CDATA{Value: "non"},
+							IsSoldout: demae.CDATA{Value: 0},
+							SizeList:  nil,
+						})
+					}
+				}
+
+				for _j := 0; _j < group.MaxChoices; _j++ {
+					thisModifierList := make([]any, len(modifierList))
+					copy(thisModifierList, modifierList)
+					parent := demae.ItemOne{
+						XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
+						Info:    demae.CDATA{Value: fmt.Sprintf("Select an item.")},
+						Code:    demae.CDATA{Value: groupId},
+						Type:    demae.CDATA{Value: buttonType},
+						Name:    demae.CDATA{Value: group.Name},
+						List: demae.KVFieldWChildren{
+							XMLName: xml.Name{Local: "list"},
+							Value:   thisModifierList,
+						},
+					}
+
+					for i, a := range parent.List.Value {
+						parent.List.Value[i].(*demae.Item).ItemCode = demae.CDATA{Value: fmt.Sprintf("%s_%d", a.(*demae.Item).ItemCode.Value, _j)}
+					}
+
+					itemModifiers = append(itemModifiers, parent)
+				}
+			} else {
+				parent := demae.ItemOne{
+					XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
+					Info:    demae.CDATA{Value: fmt.Sprintf("Max item selection is %d, minimum %d", group.MaxChoices, group.MinChoices)},
+					Code:    demae.CDATA{Value: demae.CompressUUID(group.Id)},
+					Type:    demae.CDATA{Value: buttonType},
+					Name:    demae.CDATA{Value: group.Name},
+					List: demae.KVFieldWChildren{
+						XMLName: xml.Name{Local: "list"},
+					},
+				}
+
+				for _, set := range modifiers.ModifierSets {
+					if slices.Contains(group.Modifiers, set.Id) {
+						// Save the item code to Redis.
+						modifierId := demae.CompressUUID(demae.UUID())
+						if j.KeyExists(set.Modifier.Id) {
+							modifierId, err = j.GetKey(set.Modifier.Id)
+							if err != nil {
+								return nil, 0, err
+							}
+						} else {
+							err = j.SetKey(set.Modifier.Id, modifierId)
+							if err != nil {
+								return nil, 0, err
+							}
+						}
+
+						parent.List.Value = append(parent.List.Value, demae.Item{
+							MenuCode:  demae.CDATA{Value: groupId},
+							ItemCode:  demae.CDATA{Value: modifierId},
+							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
+							Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
+							Info:      demae.CDATA{Value: "None yet"},
+							Size:      nil,
+							Image:     demae.CDATA{Value: "non"},
+							IsSoldout: demae.CDATA{Value: 0},
+							SizeList:  nil,
+						})
+					}
+				}
+
+				itemModifiers = append(itemModifiers, parent)
+			}
+
+			idx++
 		}
 	}
 

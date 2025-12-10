@@ -8,7 +8,10 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/justeat/server"
 	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/logrusorgru/aurora/v4"
+	"github.com/redis/go-redis/v9"
 	"github.com/remizovm/geonames"
 	"github.com/remizovm/geonames/models"
 	"log"
@@ -22,8 +25,10 @@ var (
 	pool          *pgxpool.Pool
 	ctx           = context.Background()
 	config        *demae.Config
+	rdb           *redis.Client
 	geonameCities map[int]*models.Feature
 	geonameStates []*models.AdminCode
+	sentryHandler *sentryhttp.Handler
 )
 
 func checkError(err error) {
@@ -44,11 +49,14 @@ func main() {
 	// Before we do anything, init Sentry to capture all errors.
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:              config.SentryDSN,
-		Debug:            true,
+		Debug:            config.IsDebug,
+		EnableTracing:    false,
 		TracesSampleRate: 1.0,
 	})
 	checkError(err)
 	defer sentry.Flush(2 * time.Second)
+
+	sentryHandler = sentryhttp.New(sentryhttp.Options{})
 
 	logger.SetDebug(config.IsDebug)
 
@@ -70,7 +78,12 @@ func main() {
 	geonameStates, err = client.Admin1CodesASCII()
 	checkError(err)
 
-	fmt.Printf("Starting HTTP connection (%s)...\nNot using the usual port for HTTP?\nBe sure to use a proxy, otherwise the Wii can't connect!\n", config.DemaeAddress)
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     config.RedisAddress,
+		Password: config.RedisPassword,
+		DB:       0,
+	})
+
 	r := NewRoute()
 	nwapi := r.HandleGroup("nwapi.php")
 	{
@@ -126,5 +139,7 @@ func main() {
 
 	// Start the Demae Channel server as well as the Just Eat payment server.
 	go server.RunServer(config)
+
+	fmt.Printf("Starting HTTP connection (%s)...\n%s\n", aurora.Yellow(config.DemaeAddress), aurora.Green("Demae Just Eat server connected!"))
 	log.Fatal(http.ListenAndServe(config.DemaeAddress, r.Handle()))
 }

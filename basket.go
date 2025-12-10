@@ -58,7 +58,7 @@ func authKey(r *Response) {
 }
 
 func basketAdd(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -111,7 +111,7 @@ func basketList(r *Response) {
 		return
 	}
 
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -134,7 +134,7 @@ func basketDelete(r *Response) {
 		return
 	}
 
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -156,7 +156,7 @@ func orderDone(r *Response) {
 		return
 	}
 
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return

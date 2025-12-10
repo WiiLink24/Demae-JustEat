@@ -8,7 +8,7 @@ import (
 )
 
 func shopInfo(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -63,7 +63,7 @@ func shopInfo(r *Response) {
 func shopList(r *Response) {
 	categoryCode := r.request.URL.Query().Get("categoryCode")
 
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -109,7 +109,7 @@ func shopList(r *Response) {
 }
 
 func shopOne(r *Response) {
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId())
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return

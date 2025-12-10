@@ -59,8 +59,8 @@ func (j *JEClient) GetBareRestaurants() (c []demae.CategoryCode, e error) {
 	for _, restaurant := range data["restaurants"].([]any) {
 		// Parse the cuisine types
 		for _, cuisine := range restaurant.(map[string]any)["cuisines"].([]any) {
-			for code, strings := range categoryTypes {
-				if slices.Contains(strings, cuisine.(map[string]any)["uniqueName"].(string)) && !slices.Contains(c, code) && restaurant.(map[string]any)["isDelivery"].(bool) {
+			for code, _strings := range categoryTypes {
+				if slices.Contains(_strings, cuisine.(map[string]any)["uniqueName"].(string)) && !slices.Contains(c, code) && restaurant.(map[string]any)["isDelivery"].(bool) {
 					c = append(c, code)
 				}
 			}

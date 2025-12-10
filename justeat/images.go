@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"golang.org/x/image/draw"
 	"image"
 	"image/jpeg"
@@ -107,7 +106,7 @@ func (j *JEClient) DownloadFoodImage(path string, restaurantID string, itemID st
 		return
 	}
 
-	err = os.WriteFile(fmt.Sprintf("logos/%s/%s.jpg", restaurantID, demae.CompressUUID(itemID)), out.Bytes(), 0666)
+	err = os.WriteFile(fmt.Sprintf("logos/%s/%s.jpg", restaurantID, itemID), out.Bytes(), 0666)
 	if err != nil {
 		log.Println("failed to save image")
 		return
