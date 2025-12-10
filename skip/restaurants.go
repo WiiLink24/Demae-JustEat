@@ -1,7 +1,6 @@
 package skip
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,48 +8,28 @@ import (
 
 func (c *Client) GetRestaurants() error {
 	query := map[string]any{
-		"operationName": "QueryRestaurantSearch",
+		"operationName": "QueryRestaurantsCuisinesList",
 		"variables": map[string]any{
-			"city":       "toronto",
-			"province":   "ON",
-			"latitude":   43.7189994,
-			"longitude":  -79.4753322,
-			"dateTime":   0,
-			"isDelivery": true,
-			"search":     "c",
-			"sortBy": map[string]any{
-				"index": -1,
-				"value": nil,
-			},
-			"language": "en",
-			"address": map[string]any{
-				"name":              "555 Rustic Rd, North York, ON M6L 1X8, Canada",
-				"city":              "Toronto",
-				"address":           "555 Rustic Rd, North York, ON M6L 1X8, Canada",
-				"address1":          "",
-				"address2":          "",
-				"latitude":          43.7189994,
-				"longitude":         -79.4753322,
-				"verifiedAccuracy":  false,
-				"useLatLongAddress": false,
-				"province":          "ON",
-				"postalCode":        "M6L 1X8",
-			},
+			"city":          "toronto",
+			"province":      "ON",
+			"latitude":      43.7188732,
+			"longitude":     -79.4753502,
+			"isDelivery":    true,
+			"dateTime":      0,
+			"search":        "",
+			"language":      "en",
+			"orderType":     "DELIVERY",
+			"withNewImages": true,
 		},
 		"extensions": map[string]any{
 			"persistedQuery": map[string]any{
 				"version":    1,
-				"sha256Hash": "bc82691b626edbbfd55a6fde11e4cf41af93273fa0bb511c7372379941e2cc1d",
+				"sha256Hash": "64ff8a1e704dceb0066b99ff7ce9d9e0b101ad70d853f097c37ba21314188069",
 			},
 		},
 	}
 
-	body, err := json.Marshal(query)
-	if err != nil {
-		return err
-	}
-
-	req, err := httpPost(GraphQLURL, bytes.NewReader(body))
+	req, err := httpPost(GraphQLURL, query)
 	if err != nil {
 		return err
 	}
@@ -66,7 +45,7 @@ func (c *Client) GetRestaurants() error {
 		return err
 	}
 
-	fmt.Println(content["data"].(map[string]any)["restaurantsList"].(map[string]any)["openRestaurants"].([]any)[0].(map[string]any)["name"])
+	fmt.Println(content)
 
 	return nil
 }
