@@ -100,6 +100,7 @@ func main() {
 		nwapi.MultipleRootNodes("webApi_basket_add", basketAdd)
 		nwapi.MultipleRootNodes("webApi_basket_list", basketList)
 		nwapi.MultipleRootNodes("webApi_basket_delete", basketDelete)
+		nwapi.MultipleRootNodes("webApi_basket_reset", basketReset)
 		nwapi.MultipleRootNodes("webApi_validate_condition", func(r *Response) {})
 		nwapi.NormalResponse("webApi_order_done", orderDone)
 		nwapi.NormalResponse("webApi_inquiry_done", inquiryDone)

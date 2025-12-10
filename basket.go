@@ -126,6 +126,14 @@ func basketList(r *Response) {
 	r.ResponseFields = basket
 }
 
+func basketReset(r *Response) {
+	_, err := pool.Exec(context.Background(), ClearBasket, r.GetHollywoodId())
+	if err != nil {
+		r.ReportError(err)
+		return
+	}
+}
+
 func basketDelete(r *Response) {
 	var basketId string
 	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
