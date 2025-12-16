@@ -3,14 +3,15 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/logrusorgru/aurora/v4"
 	"golang.org/x/oauth2"
-	"log"
-	"net/http"
 )
 
 var (
@@ -72,6 +73,7 @@ func RunServer(config *demae.Config) {
 	r.GET("/authorize", FinishPanelHandler)
 	r.GET("/userdatalogin.json", getLoginData)
 	r.GET("/2fadata.json", get2FAData)
+	r.GET("/resetdata.json", getResetData)
 
 	auth := r.Group("/")
 	auth.Use(AuthenticationMiddleware(verifier))

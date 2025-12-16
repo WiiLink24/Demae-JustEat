@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/justeat"
-	"github.com/WiiLink24/nwc24"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net"
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/WiiLink24/DemaeJustEat/justeat"
+	"github.com/WiiLink24/nwc24"
+	"github.com/gin-gonic/gin"
 )
 
 func getGenericHeaders(c *gin.Context) (map[string]string, error) {
@@ -106,6 +108,46 @@ func get2FAData(c *gin.Context) {
 		"header":  header,
 		"payload": payload,
 		"url":     fmt.Sprintf("%s/connect/token", justeat.AuthenticationURLs[countryConv]),
+	})
+}
+
+func getResetData(c *gin.Context) {
+	country := c.Query("country")
+	if country == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "country is required",
+		})
+		return
+	}
+
+	countryConv := justeat.Country(country)
+
+	deviceId := c.Query("device_id")
+	if deviceId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "device_id is required",
+		})
+		return
+	}
+
+	header := map[string]string{
+		"User-Agent":          fmt.Sprintf("[JUST-EAT-APP/%s/Android - %s - 11 (API 30)]", justeat.ApplicationVersion, deviceId),
+		"Application-Id":      justeat.ApplicationID,
+		"Application-Version": justeat.ApplicationVersion,
+		"Accept-Language":     justeat.LanguageCodes[countryConv],
+		"Accept-Charset":      "utf-8",
+		"Accept-Tenant":       country,
+		"Accept":              justeat.Accept,
+		"Accept-Version":      justeat.AcceptVersion,
+		"Content-Type":        "application/json; v=2.0; charset=utf-8",
+		"X-Jet-Application":   "OneAppAndroid",
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"header": header,
+		"url":    fmt.Sprintf("%s/consumers/%s/password-resets", justeat.KongAPIURLs[countryConv], strings.ToLower(country)),
 	})
 }
 
