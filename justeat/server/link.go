@@ -129,6 +129,7 @@ func getResetData(c *gin.Context) {
 			"success": false,
 			"message": "device_id is required",
 		})
+		return
 	}
 
 	header := map[string]string{
