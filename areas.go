@@ -3,26 +3,25 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
-	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"strconv"
 	"strings"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/justeat"
 )
 
 // Supported countries
 var (
-	supportedCountries    = []string{"Australia", "Austria", "Germany", "Ireland", "Italy", "New Zealand", "Spain", "United Kingdom"}
+	supportedCountries    = []string{"Austria", "Germany", "Ireland", "Italy", "Spain", "United Kingdom"}
 	supportedCountriesMap = map[string]string{
-		"AU": "Australia",
 		"AT": "Austria",
 		"DE": "Germany",
 		"IE": "Ireland",
 		"IT": "Italy",
-		"NZ": "New Zealand",
 		"ES": "Spain",
 		"GB": "United Kingdom",
 	}
-	supportedCountriesCodes = []justeat.Country{justeat.Australia, justeat.Austria, justeat.Germany, justeat.Ireland, justeat.Italy, justeat.NewZealand, justeat.Spain, justeat.UnitedKingdom}
+	supportedCountriesCodes = []justeat.Country{justeat.Austria, justeat.Germany, justeat.Ireland, justeat.Italy, justeat.Spain, justeat.UnitedKingdom}
 	adminCodeNameCache      = map[string]string{}
 )
 
