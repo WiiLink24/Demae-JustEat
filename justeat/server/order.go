@@ -12,22 +12,22 @@ import (
 type ActiveOrder struct {
 	WiiNumber   string
 	HollywoodID uint32
-	Braintree   justeat.CombinedBrainTree
+	Basket      justeat.WebBasket
 }
 
 const (
-	GetOrderParams = `SELECT braintree, wii_id FROM users WHERE email = $1 AND braintree IS NOT NULL`
-	GetOrderForWii = `SELECT braintree FROM users WHERE wii_id = $1 AND braintree IS NOT NULL`
-	ClearOrder     = `UPDATE users SET braintree = NULL, basket_id = NULL WHERE wii_id = $1`
+	GetOrderParams = `SELECT basket, wii_id FROM users WHERE email = $1 AND basket IS NOT NULL`
+	GetOrderForWii = `SELECT basket FROM users WHERE wii_id = $1 AND basket IS NOT NULL`
+	ClearOrder     = `UPDATE users SET basket = NULL, basket_id = NULL WHERE wii_id = $1`
 )
 
-func getActiveOrders(email string) (map[uint32]justeat.CombinedBrainTree, error) {
+func getActiveOrders(email string) (map[uint32]justeat.WebBasket, error) {
 	rows, err := pool.Query(ctx, GetOrderParams, email)
 	if err != nil {
 		return nil, err
 	}
 
-	payloads := map[uint32]justeat.CombinedBrainTree{}
+	payloads := map[uint32]justeat.WebBasket{}
 
 	defer rows.Close()
 	for rows.Next() {
@@ -38,7 +38,7 @@ func getActiveOrders(email string) (map[uint32]justeat.CombinedBrainTree, error)
 			return nil, err
 		}
 
-		var payload justeat.CombinedBrainTree
+		var payload justeat.WebBasket
 		err = json.Unmarshal([]byte(data), &payload)
 		if err != nil {
 			return nil, err
@@ -50,14 +50,14 @@ func getActiveOrders(email string) (map[uint32]justeat.CombinedBrainTree, error)
 	return payloads, nil
 }
 
-func getActiveOrderForWii(hollywoodId string) (*justeat.CombinedBrainTree, error) {
+func getActiveOrderForWii(hollywoodId string) (*justeat.WebBasket, error) {
 	var data string
 	err := pool.QueryRow(ctx, GetOrderForWii, hollywoodId).Scan(&data)
 	if err != nil {
 		return nil, err
 	}
 
-	var payload justeat.CombinedBrainTree
+	var payload justeat.WebBasket
 	err = json.Unmarshal([]byte(data), &payload)
 	if err != nil {
 		return nil, err
@@ -114,11 +114,11 @@ func displayPaymentScreen(c *gin.Context) {
 
 		wiiNo := nwc24.LoadWiiNumber(wiiNoInt)
 		hollywoodID := wiiNo.GetHollywoodID()
-		if braintree, ok := activeOrders[hollywoodID]; ok {
+		if basket, ok := activeOrders[hollywoodID]; ok {
 			activeOrdersArray = append(activeOrdersArray, ActiveOrder{
 				WiiNumber:   wiiNoStr,
 				HollywoodID: hollywoodID,
-				Braintree:   braintree,
+				Basket:      basket,
 			})
 		}
 	}
@@ -135,47 +135,9 @@ func finalizePayment(c *gin.Context) {
 		return
 	}
 
-	order, err := getActiveOrderForWii(hollywoodID)
+	err := clearOrder(hollywoodID)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	// Pseudo-client
-	client := justeat.JEClient{
-		Context:      ctx,
-		Country:      order.Country,
-		KongAPIURL:   justeat.KongAPIURLs[order.Country],
-		GlobalAPIURL: justeat.GlobalMenuCDNURLs[order.Country],
-		CheckoutURL:  justeat.CheckoutURLs[order.Country],
-		Db:           pool,
-	}
-
-	err = client.SetAuth()
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	retFirst := justeat.MakePaypalReturnURLFirst(order.Head)
-	nonce, email, payerID, err := client.GetPaypalNonce(order.BrainTreeConfig, order.Metadata, order.BrainTree.AuthorizationFingerprint, retFirst)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	ret := justeat.MakePaypalReturnURL(order.Head.PaymentResource.PaymentToken, payerID)
-
-	nonce, email, payerID, err = client.GetPaypalNonce(order.BrainTreeConfig, order.Metadata, order.BrainTree.AuthorizationFingerprint, ret)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	err = client.SendPayment(order.Metadata, nonce, email, payerID, order.OrderID)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
 	}
 }
 

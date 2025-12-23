@@ -37,7 +37,6 @@ type JEClient struct {
 	Country      Country
 	KongAPIURL   string
 	GlobalAPIURL string
-	CheckoutURL  string
 	Auth         string
 	Address      string
 	PostalCode   string
@@ -60,7 +59,6 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 		Country:      country,
 		KongAPIURL:   KongAPIURLs[country],
 		GlobalAPIURL: GlobalMenuCDNURLs[country],
-		CheckoutURL:  CheckoutURLs[country],
 		Address:      req.Header.Get("X-Address"),
 		PostalCode:   req.Header.Get("X-PostalCode"),
 		WiiID:        hollywoodID,

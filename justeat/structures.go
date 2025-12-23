@@ -1,7 +1,5 @@
 package justeat
 
-import "time"
-
 type Category struct {
 	Id           string        `json:"Id"`
 	Name         string        `json:"Name"`
@@ -272,201 +270,17 @@ type BasketEdit struct {
 	Deal     BasketStatusDeal    `json:"Deal"`
 }
 
-type Availability struct {
-	Times []AvailabilityTimes `json:"times"`
-	ASAP  bool                `json:"asapAvailable"`
-}
-
-type AvailabilityTimes struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-}
-
-type CheckoutTime struct {
-	TimeFrom string `json:"timeFrom"`
-	TimeTo   string `json:"timeTo"`
-}
-
-type CheckoutUser struct {
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	PhoneNumber string `json:"phoneNumber"`
-	// nil
-	DateOfBirth *string `json:"dateOfBirth"`
-}
-
-type CheckoutAddress struct {
-	Lines              []string `json:"lines"`
-	Locality           string   `json:"locality"`
-	AdministrativeArea *string  `json:"administrativeArea"`
-	PostalCode         string   `json:"postalCode"`
-}
-
-type CheckoutLocation struct {
-	Address     CheckoutAddress `json:"address"`
-	GeoLocation GeoLocation     `json:"geolocation"`
-}
-
-type CheckoutFulfilment struct {
-	Time struct {
-		Asap      bool         `json:"asap"`
-		Scheduled CheckoutTime `json:"scheduled"`
-	} `json:"time"`
-	Location CheckoutLocation `json:"location"`
-	Table    *string          `json:"table"`
-}
-
-type Note struct {
-	Note string `json:"note"`
-}
-
-type CheckoutNotes struct {
-	Order   Note `json:"order"`
-	Courier Note `json:"courier"`
-	Kitchen Note `json:"kitchen"`
-}
-
-type CheckoutTipping struct {
-	Courier struct {
-		FixedAmount  *int `json:"fixedAmount"`
-		CustomAmount *int `json:"customAmount"`
-	} `json:"courier"`
-}
-
-type CheckoutPatch struct {
-	Op    string `json:"op"`
-	Path  string `json:"path"`
-	Value any    `json:"value"`
-}
-
-type PaymentTypes struct {
-	AvailablePaymentTypes []PaymentOption `json:"availablePaymentTypes"`
-}
-
-type PaymentOption struct {
-	PaymentType    string                `json:"paymentType"`
-	Status         string                `json:"status"`
-	AdditionalData *AdditionalPaypalData `json:"additionalData"`
-}
-
-type AdditionalPaypalData struct {
-	ClientKey string `json:"clientKey"`
-}
-
-type BrainTreeConfig struct {
-	AuthFingerprint string `json:"authorizationFingerprint"`
-	MerchantID      string `json:"merchantId"`
-	ConfigURL       string `json:"configUrl"`
-	ClientAPIUrl    string `json:"clientApiUrl"`
-	Paypal          struct {
-		CurrencyCode string `json:"currencyIsoCode"`
-	} `json:"paypal"`
-}
-
-type BrainTreeItem struct {
+type LineItem struct {
 	Kind       string `json:"kind"`
 	Name       string `json:"name"`
 	Quantity   string `json:"quantity"`
 	UnitAmount string `json:"unit_amount"`
 }
 
-type BrainTreeExperience struct {
-	NoShipping      bool   `json:"no_shipping"`
-	BrandName       string `json:"brand_name"`
-	LocaleCode      string `json:"locale_code"`
-	UserAction      string `json:"user_action"`
-	AddressOverride bool   `json:"address_override"`
-}
-
-type BrainTreeCreatePaypal struct {
-	ReturnURL                 string              `json:"return_url"`
-	CancelURL                 string              `json:"cancel_url"`
-	OfferPayLater             bool                `json:"offer_pay_later"`
-	AuthorizationFingerprint  string              `json:"authorization_fingerprint"`
-	Amount                    string              `json:"amount"`
-	CurrencyISOCode           string              `json:"currency_iso_code"`
-	Intent                    string              `json:"intent"`
-	LineItems                 []BrainTreeItem     `json:"line_items"`
-	Line1                     string              `json:"line1"`
-	City                      string              `json:"city"`
-	PostalCode                string              `json:"postal_code"`
-	CountryCode               string              `json:"country_code"`
-	RecipientName             string              `json:"recipient_name"`
-	ExperienceProfile         BrainTreeExperience `json:"experience_profile"`
-	AuthorizationFingerprint2 string              `json:"authorizationFingerprint"`
-}
-
-type BrainTreePaymentResourceHead struct {
-	PaymentResource BrainTreePaymentResource `json:"paymentResource"`
-}
-
-type BrainTreePaymentResource struct {
-	PaymentToken string `json:"paymentToken"`
-	RedirectURL  string `json:"redirectUrl"`
-}
-
-type PaypalMetadata struct {
-	AppGUID             string `json:"app_guid"`
-	AppID               string `json:"app_id"`
-	AndroidID           string `json:"android_id"`
-	AppVersion          string `json:"app_version"`
-	AppFirstInstallTime int    `json:"app_first_install_time"`
-	AppLastUpdateTime   int    `json:"app_last_update_time"`
-	ConfURL             string `json:"conf_url"`
-	CompVersion         string `json:"comp_version"`
-	DeviceModel         string `json:"device_model"`
-	DeviceName          string `json:"device_name"`
-	GSFID               string `json:"gsf_id"`
-	IsEmulator          bool   `json:"is_emulator"`
-	EF                  string `json:"ef"`
-	IsRooted            bool   `json:"is_rooted"`
-	RF                  string `json:"rf"`
-	OSType              string `json:"os_type"`
-	OSVersion           string `json:"os_version"`
-	PayloadType         string `json:"payload_type"`
-	SMSEnabled          bool   `json:"sms_enabled"`
-	MagnesGUID          struct {
-		ID        string `json:"id"`
-		CreatedAt int    `json:"created_at"`
-	} `json:"magnes_guid"`
-	MagnesSource      int      `json:"magnes_source"`
-	SourceAppVersion  string   `json:"source_app_version"`
-	TotalStorageSpace int      `json:"total_storage_space"`
-	T                 bool     `json:"t"`
-	PairingID         string   `json:"pairing_id"`
-	ConnType          string   `json:"conn_type"`
-	ConfVersion       string   `json:"conf_version"`
-	DMO               bool     `json:"dmo"`
-	DCID              string   `json:"dc_id"`
-	DeviceUptime      int      `json:"device_uptime"`
-	IpAddrs           string   `json:"ip_addrs"`
-	IpAddresses       []string `json:"ip_addresses"`
-	LocaleCountry     string   `json:"locale_country"`
-	LocaleLang        string   `json:"locale_lang"`
-	PhoneType         string   `json:"phone_type"`
-	RiskCompSessionID string   `json:"risk_comp_session_id"`
-	Roaming           bool     `json:"roaming"`
-	SimOperatorName   string   `json:"sim_operator_name"`
-	Timestamp         int      `json:"timestamp"`
-	TZName            string   `json:"tz_name"`
-	DS                bool     `json:"ds"`
-	TZ                int      `json:"tz"`
-	NetworkOperator   string   `json:"network_operator"`
-	ProxySetting      string   `json:"proxy_setting"`
-	MGID              string   `json:"mg_id"`
-	PL                string   `json:"pl"`
-	SR                struct {
-		AC bool `json:"ac"`
-		GY bool `json:"gy"`
-		MG bool `json:"mg"`
-	} `json:"sr"`
-}
-
-type CombinedBrainTree struct {
-	OrderID         string                       `json:"orderId"`
-	Country         Country                      `json:"country"`
-	Head            BrainTreePaymentResourceHead `json:"head"`
-	BrainTree       BrainTreeCreatePaypal        `json:"brainTree"`
-	Metadata        PaypalMetadata               `json:"metadata"`
-	BrainTreeConfig BrainTreeConfig              `json:"brain_tree_config"`
+// WebBasket is a simplified and complete format of Basket which is used in our front facing web server.
+type WebBasket struct {
+	BasketURL       string     `json:"basket_url"`
+	Items           []LineItem `json:"items"`
+	Total           float64    `json:"total"`
+	CurrencyISOCode string     `json:"currency_iso_code"`
 }

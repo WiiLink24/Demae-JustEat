@@ -12,7 +12,7 @@ var (
 const (
 	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
 	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
-	UpdateBraintree = `UPDATE users SET braintree = $1 WHERE wii_id = $2`
+	UpdateBasket    = `UPDATE users SET basket = $1 WHERE wii_id = $2`
 	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model, email, wii_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 )
 
@@ -73,10 +73,6 @@ var GlobalMenuCDNURLs = map[Country]string{
 	UnitedKingdom: "https://menu-globalmenucdn.je-apis.com",
 }
 
-var CheckoutURLs = map[Country]string{
-	UnitedKingdom: "https://app-android.just-eat.co.uk",
-}
-
 var timeZones = map[Country]string{
 	Austria:       "Europe/Vienna",
 	Germany:       "Europe/Berlin",
@@ -93,4 +89,22 @@ var AuthenticationURLs = map[Country]string{
 	Italy:         "https://auth.justeat.it",
 	Spain:         "https://auth.just-eat.es",
 	UnitedKingdom: "https://auth.just-eat.co.uk",
+}
+
+var BasketURLs = map[Country]string{
+	Austria:       "https://lieferando.at",
+	Germany:       "https://lieferando.de",
+	Ireland:       "https://just-eat.ie",
+	Italy:         "https://justeat.it",
+	Spain:         "https://just-eat.es",
+	UnitedKingdom: "https://just-eat.co.uk",
+}
+
+var CurrencyISOCodes = map[Country]string{
+	Austria:       "€",
+	Germany:       "€",
+	Ireland:       "€",
+	Italy:         "€",
+	Spain:         "€",
+	UnitedKingdom: "£",
 }

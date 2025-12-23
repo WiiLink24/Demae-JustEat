@@ -22,8 +22,8 @@
                         {{ range $order := .ActiveOrders }}
                         {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice
                         $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
-                        <option value="{{ $order.WiiNumber }}">{{ $order.Braintree.BrainTree.RecipientName }} · {{
-                            $order.Braintree.BrainTree.Amount }}{{ $order.Braintree.BrainTree.CurrencyISOCode }} ({{
+                        <option value="{{ $order.WiiNumber }}">{{
+                            $order.Basket.Total }}{{ $order.Basket.CurrencyISOCode }} ({{
                             $formattedWiiNumber }})</option>
                         {{ end }}
                     </select>
@@ -31,17 +31,9 @@
                         {{ range $order := .ActiveOrders }}
                         <div id="{{ $order.WiiNumber }}"
                             class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
-                            <span class="flex flex-row justify-between text-xl font-semibold">
-                                {{ $order.Braintree.BrainTree.RecipientName }}
-
-                                <div class="text-right text-sm font-medium text-gray-300">
-                                    <div> Redacted for privacy</div>
-                                </div>
-                            </span>
-
                             <div class="pt-3 relative">
                                 <div class="space-y-2 relative">
-                                    {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                    {{ range $index, $item := $order.Basket.Items }}
                                     {{ if lt $index 3 }}
                                     <div
                                         class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
@@ -51,17 +43,17 @@
                                         </div>
                                         <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
                                             }} {{
-                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span>
+                                            $order.Basket.CurrencyISOCode }}</span>
                                     </div>
                                     {{ end }}
                                     {{ end }}
 
-                                    {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                    {{ if gt (len $order.Basket.Items) 3 }}
                                     <div
                                         class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
                                     </div>
                                     <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                        {{ len $order.Braintree.BrainTree.LineItems }} items
+                                        {{ len $order.Basket.Items }} items
                                     </div>
                                     {{ end }}
                                 </div>
@@ -71,8 +63,8 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-300 text-lg">Total</span>
                                     <span class="text-white font-bold text-2xl">{{
-                                        $order.Braintree.BrainTree.Amount }} <span class="text-lg font-medium">{{
-                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
+                                        $order.Basket.Total }} <span class="text-lg font-medium">{{
+                                            $order.Basket.CurrencyISOCode }}</span></span>
                                 </div>
                             </div>
 
@@ -91,7 +83,7 @@
                             class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                 alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with PayPal
+                            Checkout
                         </button>
                     </span>
                     {{ else }}
@@ -111,17 +103,9 @@
                                 {{ if lt $id 1 }}
                                 <div id="singleSaleTicket"
                                     class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
-                                    <span class="flex flex-row justify-between text-xl font-semibold">
-                                        {{ $order.Braintree.BrainTree.RecipientName }}
-
-                                        <div class="text-right text-sm font-medium text-gray-300">
-                                            <div> Redacted for privacy</div>
-                                        </div>
-                                    </span>
-
                                     <div class="pt-3 relative">
                                         <div class="space-y-2 relative">
-                                            {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                            {{ range $index, $item := $order.Basket.Items }}
                                             {{ if lt $index 3 }}
                                             <div
                                                 class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
@@ -131,17 +115,17 @@
                                                 </div>
                                                 <span class="w-32 text-right text-white font-medium">{{
                                                     $item.UnitAmount }} {{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span>
+                                                    $order.Basket.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
                                             {{ end }}
 
-                                            {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                            {{ if gt (len $order.Basket.Items) 3 }}
                                             <div
                                                 class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
                                             </div>
                                             <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                                {{ len $order.Braintree.BrainTree.LineItems }} items
+                                                {{ len $order.Basket.Items }} items
                                             </div>
                                             {{ end }}
                                         </div>
@@ -151,9 +135,9 @@
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-300 text-lg">Total</span>
                                             <span class="text-white font-bold text-2xl">{{
-                                                $order.Braintree.BrainTree.Amount }} <span
+                                                $order.Basket.Total }} <span
                                                     class="text-lg font-medium">{{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
+                                                    $order.Basket.CurrencyISOCode }}</span></span>
                                         </div>
                                     </div>
 
@@ -171,14 +155,14 @@
                         </div>
                         <div class="flex justify-center">
                             <button id="payment"
-                                onclick="window.open('{{ (index .ActiveOrders 0).Braintree.Head.PaymentResource.RedirectURL }}'); openPane();"
+                                onclick="window.open('{{ (index .ActiveOrders 0).Basket.BasketURL }}');"
                                 class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                     </path>
                                 </svg>
-                                Pay Now with PayPal
+                                Checkout
                             </button>
                         </div>
                         {{ end }}
@@ -200,48 +184,6 @@
                         </svg>
                         Cancel Order
                     </button>
-                </div>
-                <div id="finalizePane"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xl hidden">
-                    <div
-                        class="relative bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700 p-8 glow-effect max-w-md w-full mx-4">
-                        <div class="text-left mb-6">
-                            <h3 class="text-lg font-semibold text-white mb-2">After Payment</h3>
-                            <p class="text-gray-300 text-sm">Once you've completed your payment, use the buttons
-                                below to finalize or cancel your order</p>
-                        </div>
-
-                        <div class="space-y-3">
-                            <button id="done" onclick="done('{{(index .ActiveOrders 0).HollywoodID}}')"
-                                class="w-full px-4 py-6 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Finalize Order
-                            </button>
-
-                            <button id="cancel" onclick="cancelOrder('{{(index .ActiveOrders 0).HollywoodID}}')"
-                                class="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Cancel Order
-                            </button>
-
-                            <hr class="opacity-10 top-4 pt-6 relative">
-
-                            <p onclick="document.getElementById('finalizePane').classList.add('hidden')"
-                                class="text-white/60 hover:text-white flex flex-row items-center justify-center cursor-pointer">
-                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Close this pane
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -304,62 +246,11 @@
     }
     window.addEventListener("load", heightHelper);
 
-    // Send a POST request to /finalize with the hollywood in the POST form.
-    async function done(hollywoodId) {
-        const button = document.getElementById("done");
-        button.innerHTML = `
-                <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Finalizing...
-            `;
-        button.disabled = true;
-
-        const formData = new URLSearchParams();
-        formData.append("hollywood_id", hollywoodId);
-
-        try {
-            await fetch("/finalize", {
-                method: "POST",
-                credentials: "same-origin",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: formData
-            });
-
-            button.innerHTML = `
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Finalized
-                `;
-            button.disabled = false;
-
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } catch (error) {
-            console.error("Error finalizing order:", error);
-            button.innerHTML = `
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    Error Finalizing, check console
-                `;
-            button.disabled = false;
-        }
-    }
-
     // Send a POST request to /cancel with the hollywood in the POST form.
     async function cancelOrder(hollywoodId) {
         if (!confirm('Are you sure you want to cancel this order?')) return;
 
-        let button = document.getElementById("cancel");
-        if (!button) {
-            button = document.getElementById("cancelSingle");
-        }
+        let button = document.getElementById("cancelSingle");
 
         button.innerHTML = `
                 <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -408,17 +299,16 @@
         const selectedValue = this.value;
         if (selectedValue) {
             const selectedOrder = {{ .ActiveOrders }}.find(order => order.WiiNumber === selectedValue);
-        document.getElementById("done").setAttribute("onclick", `done('${selectedOrder.HollywoodID}')`);
-        document.getElementById("cancel").setAttribute("onclick", `cancelOrder('${selectedOrder.HollywoodID}')`);
+        document.getElementById("cancelSingle").setAttribute("onclick", `cancelOrder('${selectedOrder.HollywoodID}')`);
 
         if (selectedOrder) {
             const formattedWiiNumber = selectedOrder.WiiNumber.match(/.{1,4}/g).join("-");
             const PayPayHtml = `
-                        <button onclick="window.open('${selectedOrder.Braintree.head.paymentResource.redirectUrl}'); openPane();"
+                        <button onclick="window.open('${selectedOrder.Basket.BasketURL}');"
                             class="mt-3 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                         alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with PayPal
+                            Pay Now
                         </button>
                     `;
             document.getElementById("PayPalLink").innerHTML = PayPayHtml;
@@ -446,12 +336,6 @@
         }
     }
         });
-
-    // Show the finalize pane when the PayPal button is clicked
-    function openPane() {
-        document.getElementById("finalizePane").classList.remove("hidden");
-        document.getElementById("singleCancel").classList.add("hidden");
-    }
 </script>
 
 {{ template "footer.html" }}
