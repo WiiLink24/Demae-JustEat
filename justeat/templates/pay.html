@@ -33,7 +33,7 @@
                             class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
                             <span class="flex flex-row justify-between text-xl font-semibold">
                                 <div class="text-right text-sm font-medium text-gray-300">
-                                    <div>{{ $order.BrainTree.BrainTree.PostalCode }}<br>{{ $order.BrainTree.BrainTree.City }}</div>
+                                    <div> Redacted for privacy</div>
                                 </div>
                             </span>
 
@@ -89,7 +89,7 @@
                             class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                 alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with JustEat
+                            Pay Now with PayPal
                         </button>
                     </span>
                     {{ else }}
@@ -111,7 +111,7 @@
                                     class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
                                         <div class="text-right text-sm font-medium text-gray-300">
-                                            <div>{{ $order.BrainTree.BrainTree.PostalCode }}<br>{{ $order.BrainTree.BrainTree.City }}</div>
+                                            <div> Redacted for privacy</div>
                                         </div>
                                     </span>
 
@@ -167,23 +167,14 @@
                         </div>
                         <div class="flex justify-center">
                             <button id="payment"
-<<<<<<< Updated upstream
                                 onclick="window.open('{{ (index .ActiveOrders 0).Basket.BasketURL }}'); openPane();"
                                 class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-=======
-                                onclick="window.open('{{ (index .ActiveOrders 0).Braintree.Head.PaymentResource.RedirectURL }}'); openPane();"
-                                class="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
->>>>>>> Stashed changes
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                     </path>
                                 </svg>
-<<<<<<< Updated upstream
                                 Pay Now
-=======
-                                Pay Now with JustEat
->>>>>>> Stashed changes
                             </button>
                         </div>
                         {{ end }}
@@ -419,19 +410,11 @@
         if (selectedOrder) {
             const formattedWiiNumber = selectedOrder.WiiNumber.match(/.{1,4}/g).join("-");
             const PayPayHtml = `
-<<<<<<< Updated upstream
                         <button onclick="window.open('${selectedOrder.Basket.BasketURL}'); openPane();"
                             class="mt-3 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                         alt="Open External" class="w-5 h-5 mr-2 invert">
                             Pay Now
-=======
-                        <button onclick="window.open('${selectedOrder.Braintree.head.paymentResource.redirectUrl}'); openPane();"
-                            class="mt-3 w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
-                                        alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with JustEat
->>>>>>> Stashed changes
                         </button>
                     `;
             document.getElementById("PayPalLink").innerHTML = PayPayHtml;
