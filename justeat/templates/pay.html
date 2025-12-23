@@ -22,8 +22,8 @@
                         {{ range $order := .ActiveOrders }}
                         {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice
                         $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
-                        <option value="{{ $order.WiiNumber }}">{{ $order.Braintree.BrainTree.RecipientName }} · {{
-                            $order.Braintree.BrainTree.Amount }}{{ $order.Braintree.BrainTree.CurrencyISOCode }} ({{
+                        <option value="{{ $order.WiiNumber }}">{{
+                            $order.Basket.Total }}{{ $order.Basket.CurrencyISOCode }} ({{
                             $formattedWiiNumber }})</option>
                         {{ end }}
                     </select>
@@ -32,8 +32,6 @@
                         <div id="{{ $order.WiiNumber }}"
                             class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
                             <span class="flex flex-row justify-between text-xl font-semibold">
-                                {{ $order.Braintree.BrainTree.RecipientName }}
-
                                 <div class="text-right text-sm font-medium text-gray-300">
                                     <div> Redacted for privacy</div>
                                 </div>
@@ -41,7 +39,7 @@
 
                             <div class="pt-3 relative">
                                 <div class="space-y-2 relative">
-                                    {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                    {{ range $index, $item := $order.Basket.Items }}
                                     {{ if lt $index 3 }}
                                     <div
                                         class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
@@ -51,17 +49,17 @@
                                         </div>
                                         <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
                                             }} {{
-                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span>
+                                            $order.Basket.CurrencyISOCode }}</span>
                                     </div>
                                     {{ end }}
                                     {{ end }}
 
-                                    {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                    {{ if gt (len $order.Basket.Items) 3 }}
                                     <div
                                         class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
                                     </div>
                                     <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                        {{ len $order.Braintree.BrainTree.LineItems }} items
+                                        {{ len $order.Basket.Items }} items
                                     </div>
                                     {{ end }}
                                 </div>
@@ -71,8 +69,8 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-300 text-lg">Total</span>
                                     <span class="text-white font-bold text-2xl">{{
-                                        $order.Braintree.BrainTree.Amount }} <span class="text-lg font-medium">{{
-                                            $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
+                                        $order.Basket.Total }} <span class="text-lg font-medium">{{
+                                            $order.Basket.CurrencyISOCode }}</span></span>
                                 </div>
                             </div>
 
@@ -112,8 +110,6 @@
                                 <div id="singleSaleTicket"
                                     class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
                                     <span class="flex flex-row justify-between text-xl font-semibold">
-                                        {{ $order.Braintree.BrainTree.RecipientName }}
-
                                         <div class="text-right text-sm font-medium text-gray-300">
                                             <div> Redacted for privacy</div>
                                         </div>
@@ -121,7 +117,7 @@
 
                                     <div class="pt-3 relative">
                                         <div class="space-y-2 relative">
-                                            {{ range $index, $item := $order.Braintree.BrainTree.LineItems }}
+                                            {{ range $index, $item := $order.Basket.Items }}
                                             {{ if lt $index 3 }}
                                             <div
                                                 class="flex justify-between items-center text-sm {{ if eq $index 2 }}opacity-60{{ end }}">
@@ -131,17 +127,17 @@
                                                 </div>
                                                 <span class="w-32 text-right text-white font-medium">{{
                                                     $item.UnitAmount }} {{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span>
+                                                    $order.Basket.CurrencyISOCode }}</span>
                                             </div>
                                             {{ end }}
                                             {{ end }}
 
-                                            {{ if gt (len $order.Braintree.BrainTree.LineItems) 3 }}
+                                            {{ if gt (len $order.Basket.Items) 3 }}
                                             <div
                                                 class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-700 to-transparent pointer-events-none">
                                             </div>
                                             <div class="block relative text-xs text-gray-400 text-center pt-2 z-10">
-                                                {{ len $order.Braintree.BrainTree.LineItems }} items
+                                                {{ len $order.Basket.Items }} items
                                             </div>
                                             {{ end }}
                                         </div>
@@ -151,9 +147,9 @@
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-300 text-lg">Total</span>
                                             <span class="text-white font-bold text-2xl">{{
-                                                $order.Braintree.BrainTree.Amount }} <span
+                                                $order.Basket.Total }} <span
                                                     class="text-lg font-medium">{{
-                                                    $order.Braintree.BrainTree.CurrencyISOCode }}</span></span>
+                                                    $order.Basket.CurrencyISOCode }}</span></span>
                                         </div>
                                     </div>
 
@@ -171,14 +167,14 @@
                         </div>
                         <div class="flex justify-center">
                             <button id="payment"
-                                onclick="window.open('{{ (index .ActiveOrders 0).Braintree.Head.PaymentResource.RedirectURL }}'); openPane();"
+                                onclick="window.open('{{ (index .ActiveOrders 0).Basket.BasketURL }}'); openPane();"
                                 class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                     </path>
                                 </svg>
-                                Pay Now with PayPal
+                                Pay Now
                             </button>
                         </div>
                         {{ end }}
@@ -414,11 +410,11 @@
         if (selectedOrder) {
             const formattedWiiNumber = selectedOrder.WiiNumber.match(/.{1,4}/g).join("-");
             const PayPayHtml = `
-                        <button onclick="window.open('${selectedOrder.Braintree.head.paymentResource.redirectUrl}'); openPane();"
+                        <button onclick="window.open('${selectedOrder.Basket.BasketURL}'); openPane();"
                             class="mt-3 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                         alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with PayPal
+                            Pay Now
                         </button>
                     `;
             document.getElementById("PayPalLink").innerHTML = PayPayHtml;
