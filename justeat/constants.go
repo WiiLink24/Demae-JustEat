@@ -73,10 +73,6 @@ var GlobalMenuCDNURLs = map[Country]string{
 	UnitedKingdom: "https://menu-globalmenucdn.je-apis.com",
 }
 
-var CheckoutURLs = map[Country]string{
-	UnitedKingdom: "https://app-android.just-eat.co.uk",
-}
-
 var timeZones = map[Country]string{
 	Austria:       "Europe/Vienna",
 	Germany:       "Europe/Berlin",
