@@ -31,12 +31,6 @@
                         {{ range $order := .ActiveOrders }}
                         <div id="{{ $order.WiiNumber }}"
                             class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] animate-opacity bottom-0 absolute hidden">
-                            <span class="flex flex-row justify-between text-xl font-semibold">
-                                <div class="text-right text-sm font-medium text-gray-300">
-                                    <div> Redacted for privacy</div>
-                                </div>
-                            </span>
-
                             <div class="pt-3 relative">
                                 <div class="space-y-2 relative">
                                     {{ range $index, $item := $order.Basket.Items }}
@@ -89,7 +83,7 @@
                             class="mt-3 w-full px-4 py-3 bg-gray-600 opacity-60 cursor-not-allowed text-white rounded-lg transition duration-200 flex items-center justify-center text-base font-medium">
                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWV4dGVybmFsLWxpbmstaWNvbiBsdWNpZGUtZXh0ZXJuYWwtbGluayI+PHBhdGggZD0iTTE1IDNoNnY2Ii8+PHBhdGggZD0iTTEwIDE0IDIxIDMiLz48cGF0aCBkPSJNMTggMTN2NmEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMlY4YTIgMiAwIDAgMSAyLTJoNiIvPjwvc3ZnPg=="
                                 alt="Open External" class="w-5 h-5 mr-2 invert">
-                            Pay Now with PayPal
+                            Checkout
                         </button>
                     </span>
                     {{ else }}
@@ -109,12 +103,6 @@
                                 {{ if lt $id 1 }}
                                 <div id="singleSaleTicket"
                                     class="w-full my-4 p-4 bg-slate-700 rounded-t-lg text-white space-y-4 font-[monospace] opacity-0 animate-opacity animation-forwards delay-500 absolute !bottom-0">
-                                    <span class="flex flex-row justify-between text-xl font-semibold">
-                                        <div class="text-right text-sm font-medium text-gray-300">
-                                            <div> Redacted for privacy</div>
-                                        </div>
-                                    </span>
-
                                     <div class="pt-3 relative">
                                         <div class="space-y-2 relative">
                                             {{ range $index, $item := $order.Basket.Items }}
@@ -174,7 +162,7 @@
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                     </path>
                                 </svg>
-                                Pay Now
+                                Checkout
                             </button>
                         </div>
                         {{ end }}
