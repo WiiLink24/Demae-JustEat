@@ -13,7 +13,7 @@ const (
 	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
 	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
 	UpdateBasket    = `UPDATE users SET basket = $1 WHERE wii_id = $2`
-	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model, email, wii_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model, email, wii_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (wii_id) DO UPDATE SET authentication = EXCLUDED.authentication, expires_at = EXCLUDED.expires_at, refresh_token = EXCLUDED.refresh_token, acr = EXCLUDED.acr, device_model = EXCLUDED.device_model, email = EXCLUDED.email`
 )
 
 // MaxNumberOfRestaurants is required due to Wii memory constraints.
