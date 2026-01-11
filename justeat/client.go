@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 // Client is a generic type that both Just Eat and Skip the Dishes structures must conform to.
@@ -143,7 +144,16 @@ func (j *JEClient) refreshAuthToken(refreshToken, acr, hash string) (string, err
 
 func GetCountry(countryCode string) (Country, error) {
 	switch countryCode {
-	// TODO: Italy is actually 089 but i am testing my code
+	case "066":
+		return Austria, nil
+	case "078":
+		return Germany, nil
+	case "082":
+		return Ireland, nil
+	case "083":
+		return Italy, nil
+	case "105":
+		return Spain, nil
 	case "110":
 		return UnitedKingdom, nil
 	default:
