@@ -26,6 +26,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/app .
+COPY --from=builder /app/justeat/templates /app/justeat/templates
 
 EXPOSE 4011
 CMD ["./app"]
