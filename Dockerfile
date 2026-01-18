@@ -4,7 +4,7 @@ FROM golang:1.24.11-alpine3.23 AS builder
 # openssl is already built-in.
 RUN apk add -U --no-cache git
 
-WORKDIR /home/server
+WORKDIR /app
 
 # Cache pulled dependencies if not updated.
 COPY go.mod .
@@ -20,6 +20,12 @@ COPY logger logger
 
 # Build to name "app".
 RUN go build -o app .
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/app .
 
 EXPOSE 4011
 CMD ["./app"]
