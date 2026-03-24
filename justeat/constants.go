@@ -69,7 +69,11 @@ var KongAPIURLs = map[Country]string{
 }
 
 var GlobalMenuCDNURLs = map[Country]string{
+	Austria:       "https://menu-globalmenucdn.justeat-int.com",
+	Germany:       "https://menu-globalmenucdn.justeat-int.com",
+	Ireland:       "https://menu-globalmenucdn.justeat-int.com",
 	Italy:         "https://menu-globalmenucdn.justeat-int.com",
+	Spain:         "https://menu-globalmenucdn.justeat-int.com",
 	UnitedKingdom: "https://menu-globalmenucdn.je-apis.com",
 }
 
