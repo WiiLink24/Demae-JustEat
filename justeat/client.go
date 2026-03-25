@@ -144,13 +144,13 @@ func (j *JEClient) refreshAuthToken(refreshToken, acr, hash string) (string, err
 
 func GetCountry(countryCode string) (Country, error) {
 	switch countryCode {
-	case "066":
+	case "66":
 		return Austria, nil
-	case "078":
+	case "78":
 		return Germany, nil
-	case "082":
+	case "82":
 		return Ireland, nil
-	case "083":
+	case "83":
 		return Italy, nil
 	case "105":
 		return Spain, nil
