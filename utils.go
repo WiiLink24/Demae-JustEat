@@ -5,27 +5,26 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/nwc24"
 	"github.com/getsentry/sentry-go"
 	"github.com/logrusorgru/aurora/v4"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 func NewResponse(r *http.Request, w *http.ResponseWriter, xmlType XMLType) *Response {
 	wiiNumber, err := strconv.ParseUint(r.Header.Get("X-WiiNo"), 10, 64)
 	if err != nil {
 		// Failed to parse Wii Number or invalid integer
-		(*w).WriteHeader(http.StatusBadRequest)
 		return nil
 	}
 
 	number := nwc24.LoadWiiNumber(wiiNumber)
 	if !number.CheckWiiNumber() {
 		// Bad Wii Number
-		(*w).WriteHeader(http.StatusBadRequest)
 		return nil
 	}
 

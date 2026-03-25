@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/WiiLink24/DemaeJustEat/logger"
-	"github.com/getsentry/sentry-go"
 	"net/http"
 	"strings"
+
+	"github.com/WiiLink24/DemaeJustEat/logger"
+	"github.com/getsentry/sentry-go"
 )
 
 type Route struct {
@@ -103,6 +104,11 @@ func (r *Route) Handle() http.Handler {
 		}
 
 		resp := NewResponse(req, &w, action.XMLType)
+		if resp == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		action.Callback(resp)
 
 		if action.XMLType == None {
