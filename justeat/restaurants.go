@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
 	"net/url"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
 )
 
 var (
@@ -100,6 +102,7 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 		return nil, err
 	}
 
+	os.WriteFile("aaa.json", body, 0644)
 	var restaurants []demae.BasicShop
 	var numOfRestaurants int
 	for _, restaurant := range data["restaurants"].([]any) {

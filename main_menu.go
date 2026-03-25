@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
-	"io"
-	"strings"
 )
 
 func documentTemplate(r *Response) {
@@ -33,6 +34,7 @@ func categoryList(r *Response) {
 	if err != nil {
 		r.ReportError(err)
 		return
+
 	}
 
 	categories, err := client.GetBareRestaurants()
