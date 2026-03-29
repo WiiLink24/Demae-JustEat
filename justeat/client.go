@@ -157,6 +157,6 @@ func GetCountry(countryCode string) (Country, error) {
 	case "110":
 		return UnitedKingdom, nil
 	default:
-		return UnitedKingdom, nil
+		return Invalid, nil
 	}
 }
