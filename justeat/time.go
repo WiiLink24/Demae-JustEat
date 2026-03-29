@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
 	"strings"
 	"time"
+
+	_ "time/tzdata"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
 )
 
 func (j *JEClient) getLocalizedTimeLocation() (*time.Location, error) {
