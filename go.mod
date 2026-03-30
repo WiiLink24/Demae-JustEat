@@ -1,6 +1,6 @@
 module github.com/WiiLink24/DemaeJustEat
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/WiiLink24/nwc24 v0.0.0-20240814085438-31848a3afc3e
@@ -13,9 +13,9 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/remizovm/geonames v0.1.0
-	golang.org/x/image v0.34.0
+	golang.org/x/image v0.38.0
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/text v0.32.0
+	golang.org/x/text v0.35.0
 )
 
 require (
