@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/WiiLink24/nwc24"
 	"net/http"
+
+	"github.com/WiiLink24/nwc24"
 )
 
 type XMLType int
@@ -22,4 +23,5 @@ type Response struct {
 	request             *http.Request
 	writer              *http.ResponseWriter
 	isMultipleRootNodes bool
+	errorCode           int
 }

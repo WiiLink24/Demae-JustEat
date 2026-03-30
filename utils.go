@@ -116,7 +116,7 @@ func (r *Response) toXML() (string, error) {
 		}
 
 		// Now the version and API tags
-		version, apiStatus := GenerateVersionAndAPIStatus()
+		version, apiStatus := r.GenerateVersionAndAPIStatus()
 		temp, err = xml.MarshalIndent(version, "", "  ")
 		if err != nil {
 			return "", err
@@ -131,7 +131,7 @@ func (r *Response) toXML() (string, error) {
 
 		contents += string(temp)
 	} else {
-		version, apiStatus := GenerateVersionAndAPIStatus()
+		version, apiStatus := r.GenerateVersionAndAPIStatus()
 		r.AddCustomType(version)
 		r.AddCustomType(apiStatus)
 		temp, err := xml.MarshalIndent(r.ResponseFields, "", "  ")
@@ -145,7 +145,7 @@ func (r *Response) toXML() (string, error) {
 	return contents, nil
 }
 
-func GenerateVersionAndAPIStatus() (*demae.KVField, *demae.KVFieldWChildren) {
+func (r *Response) GenerateVersionAndAPIStatus() (*demae.KVField, *demae.KVFieldWChildren) {
 	version := demae.KVField{
 		XMLName: xml.Name{Local: "version"},
 		Value:   "1",
@@ -156,7 +156,7 @@ func GenerateVersionAndAPIStatus() (*demae.KVField, *demae.KVFieldWChildren) {
 		Value: []any{
 			demae.KVField{
 				XMLName: xml.Name{Local: "code"},
-				Value:   "0",
+				Value:   r.errorCode,
 			},
 		},
 	}

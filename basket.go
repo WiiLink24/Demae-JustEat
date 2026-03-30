@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"net/http"
+	"time"
+
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/gofrs/uuid"
-	"log"
-	"time"
 )
 
 const (
@@ -160,20 +161,22 @@ func orderDone(r *Response) {
 	var basketId string
 	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
 	if err != nil {
+		r.errorCode = http.StatusInternalServerError
 		r.ReportError(err)
 		return
 	}
 
 	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
+		r.errorCode = http.StatusInternalServerError
 		r.ReportError(err)
 		return
 	}
 
 	err = client.PlaceOrder(r.request, basketId)
 	if err != nil {
+		r.errorCode = http.StatusInternalServerError
 		r.ReportError(err)
-		log.Println(err)
 		return
 	}
 

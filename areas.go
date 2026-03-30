@@ -91,7 +91,7 @@ func areaList(r *Response) {
 	//
 	// We are not going to bother spending time to deal with this.
 	if r.request.URL.Query().Get("zipCode") != "" {
-		version, apiStatus := GenerateVersionAndAPIStatus()
+		version, apiStatus := r.GenerateVersionAndAPIStatus()
 		r.ResponseFields = []any{
 			demae.KVFieldWChildren{
 				XMLName: xml.Name{Local: "response"},
