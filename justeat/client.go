@@ -24,12 +24,10 @@ type Client interface {
 	GetMenuCategories(id string) ([]demae.Menu, error)
 	GetMenuItems(storeId, categoryId string) ([]demae.NestedItem, error)
 	GetItemData(shopID, categoryID, itemCode string) ([]demae.ItemOne, float64, error)
-	GetMenuGroupID(shopID string) (string, error)
 	CreateBasket(r *http.Request) (string, error)
 	GetBasket(basketId string, r *http.Request) ([]any, error)
 	EditBasket(basketId string, r *http.Request) error
 	RemoveItem(basketId string, productId string, r *http.Request) error
-	GetAvailableTimes(basketId string) ([]demae.KVFieldWChildren, error)
 	PlaceOrder(r *http.Request, basketId string) error
 }
 
