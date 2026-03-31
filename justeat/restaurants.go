@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -102,7 +101,6 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 		return nil, err
 	}
 
-	os.WriteFile("aaa.json", body, 0644)
 	var restaurants []demae.BasicShop
 	var numOfRestaurants int
 	for _, restaurant := range data["restaurants"].([]any) {
