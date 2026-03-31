@@ -2,6 +2,7 @@ package demae
 
 import (
 	"encoding/xml"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
@@ -28,6 +29,7 @@ type Config struct {
 	SentryDSN      string     `xml:"SentryDSN"`
 	OIDCConfig     OIDCConfig `xml:"oidc"`
 	IsDebug        bool       `xml:"IsDebug"`
+	UseSentry      bool       `xml:"UseSentry"`
 	RedisAddress   string     `xml:"RedisAddress"`
 	RedisPassword  string     `xml:"RedisPassword"`
 }

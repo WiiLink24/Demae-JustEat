@@ -4,6 +4,12 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/WiiLink24/DemaeJustEat/justeat/server"
 	"github.com/WiiLink24/DemaeJustEat/logger"
@@ -14,11 +20,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/remizovm/geonames"
 	"github.com/remizovm/geonames/models"
-	"log"
-	"net/http"
-	"os"
-	"strings"
-	"time"
 )
 
 var (
@@ -47,16 +48,18 @@ func main() {
 	checkError(err)
 
 	// Before we do anything, init Sentry to capture all errors.
-	err = sentry.Init(sentry.ClientOptions{
-		Dsn:              config.SentryDSN,
-		Debug:            config.IsDebug,
-		EnableTracing:    false,
-		TracesSampleRate: 1.0,
-	})
-	checkError(err)
-	defer sentry.Flush(2 * time.Second)
+	if config.UseSentry {
+		err = sentry.Init(sentry.ClientOptions{
+			Dsn:              config.SentryDSN,
+			Debug:            config.IsDebug,
+			EnableTracing:    false,
+			TracesSampleRate: 1.0,
+		})
+		checkError(err)
+		defer sentry.Flush(2 * time.Second)
 
-	sentryHandler = sentryhttp.New(sentryhttp.Options{})
+		sentryHandler = sentryhttp.New(sentryhttp.Options{})
+	}
 
 	logger.SetDebug(config.IsDebug)
 

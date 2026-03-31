@@ -12,6 +12,7 @@
     <ErrorWebhook></ErrorWebhook>
     <OrderWebhook></OrderWebhook>
     <IsDebug></IsDebug>
+    <UseSentry></UseSentry>
 
     <!-- External APIs -->
     <SentryDSN></SentryDSN>

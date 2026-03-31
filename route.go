@@ -64,70 +64,79 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 	})
 }
 
-func (r *Route) Handle() http.Handler {
-	return sentryHandler.HandleFunc(func(w http.ResponseWriter, req *http.Request) {
-		logger.Debug("HTTP", req.Method, req.URL.String())
+func (r *Route) handlerFunc(w http.ResponseWriter, req *http.Request) {
+	logger.Debug("HTTP", req.Method, req.URL.String())
 
-		// If this is a POST request it is either an actual request or an error.
-		var actionName string
-		var serviceType string
-		var userAgent string
-		if req.Method == "POST" {
-			req.ParseForm()
-			actionName = req.PostForm.Get("action")
-			userAgent = req.PostForm.Get("platform")
-			serviceType = "nwapi.php"
-		} else {
-			actionName = req.URL.Query().Get("action")
-			userAgent = req.URL.Query().Get("platform")
-			serviceType = strings.Replace(req.URL.Path, "/", "", -1)
+	// If this is a POST request it is either an actual request or an error.
+	var actionName string
+	var serviceType string
+	var userAgent string
+	if req.Method == "POST" {
+		req.ParseForm()
+		actionName = req.PostForm.Get("action")
+		userAgent = req.PostForm.Get("platform")
+		serviceType = "nwapi.php"
+	} else {
+		actionName = req.URL.Query().Get("action")
+		userAgent = req.URL.Query().Get("platform")
+		serviceType = strings.Replace(req.URL.Path, "/", "", -1)
+	}
+
+	if userAgent != "wii" && !strings.Contains(req.URL.Path, "img") {
+		printError(w, "Invalid request.", http.StatusBadRequest)
+		return
+	}
+
+	// Ensure we can route to this action before processing.
+	// Search all registered actions and find a matching action.
+	var action Action
+	for _, routeAction := range r.Actions {
+		if routeAction.ActionName == actionName && strings.Contains(serviceType, routeAction.ServiceType) {
+			action = routeAction
 		}
+	}
 
-		if userAgent != "wii" && !strings.Contains(req.URL.Path, "img") {
-			printError(w, "Invalid request.", http.StatusBadRequest)
-			return
-		}
+	// Action is only properly populated if we found it previously.
+	if action.ActionName == "" && action.ServiceType == "" {
+		printError(w, "Unknown action was passed.", http.StatusBadRequest)
+		return
+	}
 
-		// Ensure we can route to this action before processing.
-		// Search all registered actions and find a matching action.
-		var action Action
-		for _, routeAction := range r.Actions {
-			if routeAction.ActionName == actionName && strings.Contains(serviceType, routeAction.ServiceType) {
-				action = routeAction
-			}
-		}
+	resp := NewResponse(req, &w, action.XMLType)
+	if resp == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-		// Action is only properly populated if we found it previously.
-		if action.ActionName == "" && action.ServiceType == "" {
-			printError(w, "Unknown action was passed.", http.StatusBadRequest)
-			return
-		}
+	action.Callback(resp)
 
-		resp := NewResponse(req, &w, action.XMLType)
-		if resp == nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+	if action.XMLType == None {
+		// Already written by function
+		return
+	}
 
-		action.Callback(resp)
+	if resp.hasError {
+		// Response was already written by callback function.
+		return
+	}
 
-		if action.XMLType == None {
-			// Already written by function
-			return
-		}
-
-		if resp.hasError {
-			// Response was already written by callback function.
-			return
-		}
-
-		contents, err := resp.toXML()
-		if err != nil {
-			printError(w, err.Error(), http.StatusInternalServerError)
+	contents, err := resp.toXML()
+	if err != nil {
+		printError(w, err.Error(), http.StatusInternalServerError)
+		if config.UseSentry {
 			sentry.CaptureException(err)
-			return
 		}
 
-		w.Write([]byte(contents))
-	})
+		return
+	}
+
+	w.Write([]byte(contents))
+}
+
+func (r *Route) Handle() http.Handler {
+	if config.UseSentry {
+		return sentryHandler.HandleFunc(r.handlerFunc)
+	}
+
+	return http.HandlerFunc(r.handlerFunc)
 }
