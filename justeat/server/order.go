@@ -2,11 +2,11 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/WiiLink24/DemaeJustEat/justeat"
-	"github.com/WiiLink24/nwc24"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/WiiLink24/DemaeJustEat/justeat"
+	"github.com/gin-gonic/gin"
 )
 
 type ActiveOrder struct {
@@ -72,19 +72,10 @@ func clearOrder(hollywoodId string) error {
 }
 
 func displayPaymentScreen(c *gin.Context) {
-	justEatWiis, ok := c.Get("just_eat")
+	_wiis, ok := c.Get("wiis")
 	if !ok {
 		c.Status(http.StatusInternalServerError)
 		return
-	}
-
-	var linkedWiis []string
-	for wiiNo, isLinked := range justEatWiis.(map[string]bool) {
-		if !isLinked {
-			continue
-		}
-
-		linkedWiis = append(linkedWiis, wiiNo)
 	}
 
 	email, ok := c.Get("email")
@@ -100,24 +91,18 @@ func displayPaymentScreen(c *gin.Context) {
 		return
 	}
 
-	// This was a design oversight by me, the postgres database has the Hollywood ID while Authentik DB has the Wii Number.
-	// We need both so we can allow the user to choose which Wii they want to for a purchase if for some reason they have more
-	// than one active order, and post to the finalizePayment endpoint.
 	var activeOrdersArray []ActiveOrder
-	for _, wiiNoStr := range linkedWiis {
-		// Convert to Wii ID and find active order if any.
-		wiiNoInt, err := strconv.ParseUint(wiiNoStr, 10, 64)
+	for _, wii := range _wiis.([]Wii) {
+		hollywood, err := strconv.ParseUint(wii.HollywoodID, 10, 64)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
 
-		wiiNo := nwc24.LoadWiiNumber(wiiNoInt)
-		hollywoodID := wiiNo.GetHollywoodID()
-		if basket, ok := activeOrders[hollywoodID]; ok {
+		if basket, ok := activeOrders[uint32(hollywood)]; ok {
 			activeOrdersArray = append(activeOrdersArray, ActiveOrder{
-				WiiNumber:   wiiNoStr,
-				HollywoodID: hollywoodID,
+				WiiNumber:   wii.WiiNumber,
+				HollywoodID: uint32(hollywood),
 				Basket:      basket,
 			})
 		}

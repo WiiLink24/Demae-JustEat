@@ -153,15 +153,17 @@ func getResetData(c *gin.Context) {
 
 func saveUserData(c *gin.Context) {
 	// First verify the Wii is linked to this account.
-	wiis, _ := c.Get("wiis")
+	_wiis, _ := c.Get("wiis")
 	wiiNoStr := c.PostForm("wii_number")
 
-	if !slices.Contains(wiis.([]string), wiiNoStr) {
+	wiis := _wiis.([]Wii)
+	if !slices.ContainsFunc(wiis, func(w Wii) bool {
+		return w.WiiNumber == wiiNoStr
+	}) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Wii Number not linked to account.",
+			"error":   "Wii Number not linked to account.",
 		})
-		return
 	}
 
 	// Convert Wii number to object.
