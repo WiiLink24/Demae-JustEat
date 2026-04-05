@@ -1,21 +1,25 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type Claims struct {
-	Email    string          `json:"email"`
-	Username string          `json:"preferred_username"`
-	Name     string          `json:"name"`
-	UserId   string          `json:"sub"`
-	Groups   []string        `json:"groups"`
-	Wiis     []string        `json:"wiis"`
-	WWFC     []string        `json:"wwfc"`
-	Dominos  map[string]bool `json:"dominos"`
-	JustEat  map[string]bool `json:"just_eat"`
+	Email    string   `json:"email"`
+	Username string   `json:"preferred_username"`
+	Name     string   `json:"name"`
+	UserId   string   `json:"sub"`
+	Groups   []string `json:"groups"`
+	Wiis     []Wii    `json:"wiis"`
+}
+
+type Wii struct {
+	WiiNumber     string `json:"wii_number"`
+	HollywoodID   string `json:"hollywood_id"`
+	JustEatLinked bool   `json:"just_eat_linked"`
 }
 
 func AuthenticationMiddleware(verifier *oidc.IDTokenVerifier) gin.HandlerFunc {
@@ -46,7 +50,7 @@ func AuthenticationMiddleware(verifier *oidc.IDTokenVerifier) gin.HandlerFunc {
 		c.Set("username", claims.Username)
 		c.Set("user_id", claims.UserId)
 		c.Set("email", claims.Email)
-		c.Set("just_eat", claims.JustEat)
+		c.Set("wiis", claims.Wiis)
 		c.Next()
 	}
 }
