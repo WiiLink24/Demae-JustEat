@@ -18,7 +18,7 @@ type Claims struct {
 
 type Wii struct {
 	WiiNumber     string `json:"wii_number"`
-	HollywoodID   string `json:"hollywood_id"`
+	HollywoodID   int    `json:"hollywood_id"`
 	JustEatLinked bool   `json:"just_eat_linked"`
 }
 
