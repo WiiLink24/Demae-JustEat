@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,48 +9,12 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/WiiLink24/nwc24"
 	"github.com/gin-gonic/gin"
 )
-
-func getGenericHeaders(c *gin.Context) (map[string]string, error) {
-	deviceId := c.Query("device_id")
-	if deviceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-		})
-		return nil, fmt.Errorf("device_id is required")
-	}
-
-	country := c.Query("country")
-	if country == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-		})
-		return nil, fmt.Errorf("country is required")
-	}
-
-	countryConv := justeat.Country(country)
-	authorization := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", justeat.ClientNames[countryConv], justeat.ClientUUIDs[countryConv]))))
-
-	return map[string]string{
-		"User-Agent":                fmt.Sprintf("[JUST-EAT-APP/%s/Android - %s - 11 (API 30)]", justeat.ApplicationVersion, deviceId),
-		"Application-Id":            justeat.ApplicationID,
-		"Accept-Language":           justeat.LanguageCodes[countryConv],
-		"Accept-Charset":            "utf-8",
-		"Accept-Tenant":             country,
-		"Accept":                    justeat.Accept,
-		"Accept-Version":            justeat.AcceptVersion,
-		"X-Jet-Application-Id":      justeat.JetApplicationID,
-		"X-Jet-Application-Version": justeat.JetVersion,
-		"Authorization":             authorization,
-		"Content-Type":              "application/x-www-form-urlencoded",
-	}, nil
-}
 
 func getLoginData(c *gin.Context) {
 	country := c.Query("country")
@@ -65,89 +28,9 @@ func getLoginData(c *gin.Context) {
 
 	countryConv := justeat.Country(country)
 
-	header, err := getGenericHeaders(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
-		return
-	}
-
-	payload := map[string]any{
-		"grant_type": "password",
-		"scope":      "openid mobile_scope offline_access",
-		"tenant":     country,
-		"client_id":  justeat.ClientNames[countryConv],
-	}
-
 	c.JSON(http.StatusOK, gin.H{
-		"header":  header,
-		"payload": payload,
-		"url":     fmt.Sprintf("%s/connect/token", justeat.AuthenticationURLs[countryConv]),
-	})
-}
-
-func get2FAData(c *gin.Context) {
-	country := c.Query("country")
-	if country == "" {
-		c.JSON(http.StatusBadRequest, gin.H{})
-	}
-
-	countryConv := justeat.Country(country)
-	header, err := getGenericHeaders(c)
-	if err != nil {
-		return
-	}
-
-	payload := map[string]any{
-		"grant_type": "mfa_otp",
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"header":  header,
-		"payload": payload,
-		"url":     fmt.Sprintf("%s/connect/token", justeat.AuthenticationURLs[countryConv]),
-	})
-}
-
-func getResetData(c *gin.Context) {
-	country := c.Query("country")
-	if country == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "country is required",
-		})
-		return
-	}
-
-	countryConv := justeat.Country(country)
-
-	deviceId := c.Query("device_id")
-	if deviceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "device_id is required",
-		})
-		return
-	}
-
-	header := map[string]string{
-		"User-Agent":          fmt.Sprintf("[JUST-EAT-APP/%s/Android - %s - 11 (API 30)]", justeat.ApplicationVersion, deviceId),
-		"Application-Id":      justeat.ApplicationID,
-		"Application-Version": justeat.ApplicationVersion,
-		"Accept-Language":     justeat.LanguageCodes[countryConv],
-		"Accept-Charset":      "utf-8",
-		"Accept-Tenant":       country,
-		"Accept":              justeat.Accept,
-		"Accept-Version":      justeat.AcceptVersion,
-		"Content-Type":        "application/json; v=2.0; charset=utf-8",
-		"X-Jet-Application":   "OneAppAndroid",
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"header": header,
-		"url":    fmt.Sprintf("%s/consumers/%s/password-resets", justeat.KongAPIURLs[countryConv], strings.ToLower(country)),
+		"eater_url": justeat.BasketURLs[countryConv],
+		"token_url": fmt.Sprintf("%s/connect/token", justeat.AuthenticationURLs[countryConv]),
 	})
 }
 
