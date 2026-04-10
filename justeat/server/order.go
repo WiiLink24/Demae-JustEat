@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/gin-gonic/gin"
@@ -93,16 +92,10 @@ func displayPaymentScreen(c *gin.Context) {
 
 	var activeOrdersArray []ActiveOrder
 	for _, wii := range _wiis.([]Wii) {
-		hollywood, err := strconv.ParseUint(wii.HollywoodID, 10, 64)
-		if err != nil {
-			c.Status(http.StatusInternalServerError)
-			return
-		}
-
-		if basket, ok := activeOrders[uint32(hollywood)]; ok {
+		if basket, ok := activeOrders[uint32(wii.HollywoodID)]; ok {
 			activeOrdersArray = append(activeOrdersArray, ActiveOrder{
 				WiiNumber:   wii.WiiNumber,
-				HollywoodID: uint32(hollywood),
+				HollywoodID: uint32(wii.HollywoodID),
 				Basket:      basket,
 			})
 		}
