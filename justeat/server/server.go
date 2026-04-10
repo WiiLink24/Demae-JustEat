@@ -71,9 +71,7 @@ func RunServer(config *demae.Config) {
 	r.GET("/login", LoginPage)
 	r.GET("/start", StartPanelHandler)
 	r.GET("/authorize", FinishPanelHandler)
-	r.GET("/userdatalogin.json", getLoginData)
-	r.GET("/2fadata.json", get2FAData)
-	r.GET("/resetdata.json", getResetData)
+	r.GET("/loginurls.json", getLoginData)
 
 	auth := r.Group("/")
 	auth.Use(AuthenticationMiddleware(verifier))
