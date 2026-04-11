@@ -192,11 +192,11 @@ func inquiryDone(r *Response) {
 	}
 
 	// Now handle error.
-	errorString := fmt.Sprintf(
-		"An error has occured at on request %s\nError message: %s",
+	errorString := fmt.Errorf(
+		"An error has occurred at on request %s\nError message: %s",
 		shiftJisDecoder(r.request.PostForm.Get("requestType")),
 		shiftJisDecoder(r.request.PostForm.Get("message")),
 	)
 
-	r.ReportError(fmt.Errorf(errorString))
+	r.ReportError(errorString)
 }
