@@ -15,7 +15,7 @@ import (
 func documentTemplate(r *Response) {
 	r.AddKVWChildNode("container0", demae.KVField{
 		XMLName: xml.Name{Local: "contents"},
-		Value:   "TODO: Privacy Policy and Terms of Service",
+		Value:   "By clicking agree, you verify you have read and\nagreed to https://wiilink.ca/privacy-policy/just-eat\nand https://wiilink.ca/tos/just-eat.",
 	})
 	r.AddKVWChildNode("container1", demae.KVField{
 		XMLName: xml.Name{Local: "contents"},
@@ -192,11 +192,11 @@ func inquiryDone(r *Response) {
 	}
 
 	// Now handle error.
-	errorString := fmt.Sprintf(
-		"An error has occured at on request %s\nError message: %s",
+	errorString := fmt.Errorf(
+		"An error has occurred at on request %s\nError message: %s",
 		shiftJisDecoder(r.request.PostForm.Get("requestType")),
 		shiftJisDecoder(r.request.PostForm.Get("message")),
 	)
 
-	r.ReportError(fmt.Errorf(errorString))
+	r.ReportError(errorString)
 }
