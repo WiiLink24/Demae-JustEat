@@ -15,7 +15,7 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/redis/go-redis/v9"
 	"github.com/remizovm/geonames"
@@ -65,9 +65,7 @@ func main() {
 
 	// Initialize database
 	dbString := fmt.Sprintf("postgres://%s:%s@%s/%s", config.SQLUser, config.SQLPass, config.SQLAddress, config.SQLDB)
-	dbConf, err := pgxpool.ParseConfig(dbString)
-	checkError(err)
-	pool, err = pgxpool.ConnectConfig(ctx, dbConf)
+	pool, err = pgxpool.New(ctx, dbString)
 	checkError(err)
 
 	// Ensure this Postgresql connection is valid.

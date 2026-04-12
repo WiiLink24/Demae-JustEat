@@ -9,7 +9,7 @@ import (
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/logrusorgru/aurora/v4"
 	"golang.org/x/oauth2"
 )
@@ -49,9 +49,7 @@ func RunServer(config *demae.Config) {
 
 	// Open a Postgres pool for this goroutine only.
 	dbString := fmt.Sprintf("postgres://%s:%s@%s/%s", config.SQLUser, config.SQLPass, config.SQLAddress, config.SQLDB)
-	dbConf, err := pgxpool.ParseConfig(dbString)
-	checkError(err)
-	pool, err = pgxpool.ConnectConfig(ctx, dbConf)
+	pool, err = pgxpool.New(ctx, dbString)
 	checkError(err)
 
 	defer pool.Close()
