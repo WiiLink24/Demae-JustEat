@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/WiiLink24/DemaeJustEat/demae"
-	"github.com/WiiLink24/DemaeJustEat/justeat/server"
-	"github.com/WiiLink24/DemaeJustEat/logger"
+	"github.com/PeriTheFrost/Demae-PedidosYa/demae"
+	"github.com/PeriTheFrost/Demae-PedidosYa/logger"
+	"github.com/PeriTheFrost/Demae-PedidosYa/pedidosya/server"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/jackc/pgx/v5/pgxpool"
