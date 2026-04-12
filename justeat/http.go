@@ -2,7 +2,6 @@ package justeat
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -91,22 +90,13 @@ func (j *JEClient) unauthorizedPost(url string, body url.Values) (*http.Response
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", url, strings.NewReader(body.Encode()))
 
-	// The authorization is a combination of the application's UUID and name.
-	basicStr := fmt.Sprintf("%s:%s", ClientNames[j.Country], ClientUUIDs[j.Country])
-	auth := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(basicStr)))
-
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
-	req.Header.Set("Application-Id", ApplicationID)
-	req.Header.Set("Application-Version", ApplicationVersion)
 	req.Header.Set("Accept-Language", LanguageCodes[j.Country])
 	req.Header.Set("Accept-Charset", "utf-8")
-	req.Header.Set("Accept-Tenant", string(j.Country))
+	req.Header.Set("Accept-Tenant", strings.ToLower(string(j.Country)))
 	req.Header.Set("Accept", Accept)
-	req.Header.Set("Accept-Version", AcceptVersion)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("X-Jet-Application-Id", JetApplicationID)
-	req.Header.Set("X-Jet-Application-Version", JetVersion)
+	req.Header.Set("X-Jet-Application", "OneWeb")
 
 	return client.Do(req)
 }
