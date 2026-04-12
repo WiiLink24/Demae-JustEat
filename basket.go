@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -175,6 +176,12 @@ func orderDone(r *Response) {
 
 	err = client.PlaceOrder(r.request, basketId)
 	if err != nil {
+		PostDiscordWebhook(
+			"Performing error failed.",
+			fmt.Sprintf("The order was placed by user id %s", r.GetHollywoodId()),
+			config.OrderWebhook,
+			65311,
+		)
 		r.errorCode = http.StatusInternalServerError
 		r.ReportError(err)
 		return
@@ -189,4 +196,12 @@ func orderDone(r *Response) {
 	r.AddKVNode("orderDay", currentTime)
 	r.AddKVNode("hashKey", "Testing: 1, 2, 3")
 	r.AddKVNode("hour", currentTime)
+
+	// Post and log successful order!
+	PostDiscordWebhook(
+		"A successful order has been processed!",
+		fmt.Sprintf("The order was placed by user id %s", r.request.Header.Get("X-WiiNo")),
+		config.OrderWebhook,
+		65311,
+	)
 }
