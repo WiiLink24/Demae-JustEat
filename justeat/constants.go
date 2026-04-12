@@ -72,7 +72,7 @@ var GlobalMenuCDNURLs = map[Country]string{
 	Austria:       "https://globalmenucdn.eu-central-1.production.jet-external.com",
 	Germany:       "https://globalmenucdn.eu-central-1.production.jet-external.com",
 	Ireland:       "https://menu-globalmenucdn.justeat-int.com",
-	Italy:         "https://globalmenucdn.eu-central-1.production.jet-external.com",
+	Italy:         "https://menu-globalmenucdn.justeat-int.com",
 	Spain:         "https://menu-globalmenucdn.justeat-int.com",
 	UnitedKingdom: "https://menu-globalmenucdn.je-apis.com",
 }
