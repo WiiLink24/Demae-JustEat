@@ -7,7 +7,6 @@ require (
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/getsentry/sentry-go v0.45.0
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/logrusorgru/aurora/v4 v4.0.0
