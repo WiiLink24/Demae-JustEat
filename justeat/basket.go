@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
 )
 
 func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
@@ -129,15 +130,68 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 }
 
 func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity int) (*Deal, error) {
+	type ModifierPreAdd struct {
+		GroupId    string
+		ModifierId string
+		Quantity   int
+	}
+
 	// Split itemCode into it's parts.
 	itemCodes := strings.Split(itemCode, "|")
-	dealId := itemCodes[0]
+	// dealId := itemCodes[0]
 	itemId := itemCodes[1]
-	modifierId := itemCodes[2]
 
-	product, err := j.formProduct(r, modifierId, quantity)
-	if err != nil {
-		return nil, err
+	products := make(map[string]DealGroup)
+	for items, _ := range r.PostForm {
+		if strings.Contains(items, "option") {
+			// Extract the topping type and code
+			var groupID string
+			for i, s := range strings.Split(items, "[") {
+				switch i {
+				case 0:
+					continue
+				case 1:
+					// Deal group id
+					groupID = strings.Split(s, "]")[0]
+				case 2:
+					// Modifier Group ID
+					// Can be possible to have duplicates of a modifier. In this case we want to increment the quantity.
+					notModifiedId := strings.Split(s, "]")[0]
+					if notModifiedId[len(notModifiedId)-2] == '_' {
+						// We got one. We should also strip the suffix.
+						notModifiedId = notModifiedId[:len(notModifiedId)-2]
+					}
+
+					key, err := j.GetKey(notModifiedId)
+					if err != nil {
+						return nil, err
+					}
+
+					key = strings.Split(key, "|")[0]
+					if m, ok := products[groupID]; ok {
+						m.Products = append(products[groupID].Products, Product{
+							ProductId: key,
+							Quantity:  1,
+						})
+					} else {
+						products[groupID] = DealGroup{
+							DealGroupId: groupID,
+							Products: []Product{
+								{
+									ProductId: key,
+									Quantity:  1,
+								},
+							},
+						}
+					}
+				}
+			}
+		}
+	}
+
+	var dealGroups []DealGroup
+	for _, group := range products {
+		dealGroups = append(dealGroups, group)
 	}
 
 	return &Deal{
@@ -145,12 +199,7 @@ func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity in
 		ProductId:      itemId,
 		Quantity:       quantity,
 		ModifierGroups: nil,
-		DealGroups: []DealGroup{
-			{
-				DealGroupId: dealId,
-				Products:    []Product{*product},
-			},
-		},
+		DealGroups:     dealGroups,
 	}, nil
 }
 
@@ -182,7 +231,7 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 	var products []Product
 	var deals []Deal
 	itemCodes := strings.Split(itemCode, "|")
-	if len(itemCodes) == 3 {
+	if len(itemCodes) == 2 {
 		deal, err := j.formDealProduct(r, itemCode, quantity)
 		if err != nil {
 			return "", err
@@ -472,6 +521,20 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 							IsSoldout:  demae.CDATA{Value: demae.BoolToInt(false)},
 						})
 					}
+				}
+
+				if len(group.List.Value) == 0 {
+					// Form with just the product
+					group.List.Value = append(group.List.Value, demae.Item{
+						MenuCode:   demae.CDATA{Value: demae.CompressUUID(_product.ProductId)},
+						ItemCode:   demae.CDATA{Value: demae.CompressUUID(_product.ProductId)},
+						Name:       demae.CDATA{Value: _product.Name},
+						Price:      demae.CDATA{Value: _product.TotalPrice},
+						Info:       demae.CDATA{Value: 0},
+						IsSelected: &demae.CDATA{Value: demae.BoolToInt(true)},
+						Image:      demae.CDATA{Value: 0},
+						IsSoldout:  demae.CDATA{Value: demae.BoolToInt(false)},
+					})
 				}
 
 				modifiers = append(modifiers, group)

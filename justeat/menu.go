@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"io"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
 )
 
 const (
@@ -148,6 +149,11 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		}
 
 		if recs["themes"] == nil {
+			break
+		}
+
+		// Possible that themes can exist but be empty
+		if len(recs["themes"].([]any)) == 0 {
 			break
 		}
 
@@ -372,54 +378,27 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 		// before proceeding as the deal which we select impacts all modifiers.
 		// We are guaranteed one "variation" as well as one "DealGroupId"
 		variation := item.Variations[0]
-
-		// We cannot support multiple DealGroups as it has a level of depth Demae does not allow.
-		if len(variation.DealGroupsIds) > 1 {
-			return nil, nil
-		}
-
-		for _, group := range modifiers.DealGroups {
-			if slices.Contains(variation.DealGroupsIds, group.Id) {
-				// We can use this deal.
-				for i, itemVariation := range group.DealItemVariations {
-					// We have to look up the variation in the items list.
-					idx := slices.IndexFunc(items.Items, func(i Item) bool {
-						return i.Id == itemVariation.DealItemVariationId
-					})
-
-					if idx == -1 {
-						continue
-					}
-
-					// Demae does not give us the parent item ID even though we have to supply it.
-					// We also need the Deal ID for when we add to basket.
-					// Therefore, we use this format for the item code:
-					// dealID|itemID|modifierID
-					curItemVar := items.Items[idx]
-					dealItemCode := group.Id + "|" + item.Id + "|" + curItemVar.Id
-					dealItemCodeForDemae := demae.CompressUUID(demae.UUID())
-					if j.KeyExists(dealItemCode) {
-						dealItemCodeForDemae, err = j.GetKey(dealItemCode)
-						if err != nil {
-							return nil, err
-						}
-					} else {
-						err = j.SetKey(dealItemCode, dealItemCodeForDemae)
-						if err != nil {
-							return nil, err
-						}
-					}
-
-					variations = append(variations, demae.ItemSize{
-						XMLName:   xml.Name{Local: fmt.Sprintf("item%d", i)},
-						ItemCode:  demae.CDATA{Value: dealItemCodeForDemae},
-						Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(curItemVar.Name), 21, 2)},
-						Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice+itemVariation.AdditionPrice)},
-						IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, curItemVar.Id) || slices.Contains(soldOutItems, item.Id))},
-					})
-				}
+		dealItemCode := variation.Id + "|" + item.Id
+		dealItemCodeForDemae := demae.CompressUUID(demae.UUID())
+		if j.KeyExists(dealItemCode) {
+			dealItemCodeForDemae, err = j.GetKey(dealItemCode)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = j.SetKey(dealItemCode, dealItemCodeForDemae)
+			if err != nil {
+				return nil, err
 			}
 		}
+
+		variations = append(variations, demae.ItemSize{
+			XMLName:   xml.Name{Local: "item0"},
+			ItemCode:  demae.CDATA{Value: dealItemCodeForDemae},
+			Size:      demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(item.Name), 21, 2)},
+			Price:     demae.CDATA{Value: fmt.Sprintf("%.2f", variation.BasePrice)},
+			IsSoldout: demae.CDATA{Value: demae.BoolToInt(slices.Contains(soldOutItems, variation.Id) || slices.Contains(soldOutItems, item.Id))},
+		})
 	} else {
 		for i, variation := range item.Variations {
 			name := variation.Name
@@ -520,9 +499,9 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	}
 
 	itemIDs := strings.Split(justEatItemCode, "|")
-	if len(itemIDs) == 3 {
-		// We need the modifier code.
-		justEatItemCode = itemIDs[2]
+	if len(itemIDs) == 2 {
+		// Deal type, we require the actual item ID
+		justEatItemCode = itemIDs[0]
 	}
 
 	var variation Variation
@@ -547,7 +526,130 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 	}
 
 	var itemModifiers []demae.ItemOne
+	if len(itemIDs) == 2 {
+		// Deal type, we have to do some special stuff.
+		itemModifiers, err = j.GetItemModifiersForDeal(&items, variation, modifiers)
+		if err != nil {
+			return nil, 0, err
+		}
+	} else {
+		itemModifiers, err = j.GetItemModifiers(variation, modifiers)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return itemModifiers, variation.BasePrice, nil
+}
+
+func (j *JEClient) GetItemModifiersForDeal(items *Items, variation Variation, modifiers *Modifiers) ([]demae.ItemOne, error) {
+	var itemModifiers []demae.ItemOne
 	var idx int
+
+	for _, group := range modifiers.DealGroups {
+		if slices.Contains(variation.DealGroupsIds, group.Id) {
+			for _, itemVariation := range group.DealItemVariations {
+				itemIdx := slices.IndexFunc(items.Items, func(i Item) bool {
+					return i.Id == itemVariation.DealItemVariationId
+				})
+
+				if itemIdx == -1 {
+					continue
+				}
+
+				curItemVar := items.Items[itemIdx]
+				varIdx := slices.IndexFunc(curItemVar.Variations, func(_var Variation) bool {
+					return _var.Id == curItemVar.Id
+				})
+
+				curItemModifiers, err := j.GetItemModifiers(curItemVar.Variations[varIdx], modifiers)
+				if err != nil {
+					return nil, err
+				}
+
+				itemModifiers = append(itemModifiers, curItemModifiers...)
+
+				// Create it ourselves using super evil tactics
+				buttonType := "box"
+				if group.NumberOfChoices == 1 {
+					buttonType = "radio"
+
+					var modifierList []any
+					for _, dealItemVar := range group.DealItemVariations {
+						itemIdx = slices.IndexFunc(items.Items, func(i Item) bool {
+							return i.Id == dealItemVar.DealItemVariationId
+						})
+
+						item := items.Items[itemIdx]
+						// Save the item code to Redis.
+						// Format as dealGroupId + | + itemId
+						idToSave := dealItemVar.DealItemVariationId + "|" + item.Id
+						modifierId := demae.CompressUUID(demae.UUID())
+						if j.KeyExists(idToSave) {
+							modifierId, err = j.GetKey(idToSave)
+							if err != nil {
+								return nil, err
+							}
+						} else {
+							err = j.SetKey(idToSave, modifierId)
+							if err != nil {
+								return nil, err
+							}
+						}
+
+						modifierList = append(modifierList, &demae.Item{
+							MenuCode:  demae.CDATA{Value: group.Id},
+							ItemCode:  demae.CDATA{Value: modifierId},
+							Name:      demae.CDATA{Value: demae.Wordwrap(item.Name, 18, 2)},
+							Price:     demae.CDATA{Value: dealItemVar.AdditionPrice},
+							Info:      demae.CDATA{Value: "None yet"},
+							Size:      nil,
+							Image:     demae.CDATA{Value: "non"},
+							IsSoldout: demae.CDATA{Value: 0},
+							SizeList:  nil,
+						})
+					}
+
+					for _j := 0; _j < group.NumberOfChoices; _j++ {
+						thisModifierList := make([]any, len(modifierList))
+						copy(thisModifierList, modifierList)
+						parent := demae.ItemOne{
+							XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
+							Info:    demae.CDATA{Value: "Select an item."},
+							Code:    demae.CDATA{Value: group.Id},
+							Type:    demae.CDATA{Value: buttonType},
+							Name:    demae.CDATA{Value: group.Name},
+							List: demae.KVFieldWChildren{
+								XMLName: xml.Name{Local: "list"},
+								Value:   thisModifierList,
+							},
+						}
+
+						for i, a := range parent.List.Value {
+							parent.List.Value[i].(*demae.Item).ItemCode = demae.CDATA{Value: fmt.Sprintf("%s_%d", a.(*demae.Item).ItemCode.Value, _j)}
+						}
+
+						itemModifiers = append(itemModifiers, parent)
+					}
+				}
+
+				idx++
+				if len(group.DealItemVariations) > 1 {
+					break
+				}
+			}
+		}
+	}
+
+	return itemModifiers, nil
+}
+
+func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) ([]demae.ItemOne, error) {
+	var itemModifiers []demae.ItemOne
+	var idx int
+	var err error
+	var modifierId string
+
 	for _, group := range modifiers.ModifierGroups {
 		if slices.Contains(variation.ModifierGroupsIds, group.Id) {
 			// Save group ID to Redis
@@ -555,12 +657,12 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 			if j.KeyExists(group.Id) {
 				groupId, err = j.GetKey(group.Id)
 				if err != nil {
-					return nil, 0, err
+					return nil, err
 				}
 			} else {
-				err = j.SetKey(group.Id, groupId)
+				err := j.SetKey(group.Id, groupId)
 				if err != nil {
-					return nil, 0, err
+					return nil, err
 				}
 			}
 
@@ -574,16 +676,16 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 				for _, set := range modifiers.ModifierSets {
 					if slices.Contains(group.Modifiers, set.Id) {
 						// Save the item code to Redis.
-						modifierId := demae.CompressUUID(demae.UUID())
+						modifierId = demae.CompressUUID(demae.UUID())
 						if j.KeyExists(set.Modifier.Id) {
 							modifierId, err = j.GetKey(set.Modifier.Id)
 							if err != nil {
-								return nil, 0, err
+								return nil, err
 							}
 						} else {
 							err = j.SetKey(set.Modifier.Id, modifierId)
 							if err != nil {
-								return nil, 0, err
+								return nil, err
 							}
 						}
 
@@ -606,7 +708,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 					copy(thisModifierList, modifierList)
 					parent := demae.ItemOne{
 						XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
-						Info:    demae.CDATA{Value: fmt.Sprintf("Select an item.")},
+						Info:    demae.CDATA{Value: "Select an item."},
 						Code:    demae.CDATA{Value: groupId},
 						Type:    demae.CDATA{Value: buttonType},
 						Name:    demae.CDATA{Value: group.Name},
@@ -637,16 +739,16 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 				for _, set := range modifiers.ModifierSets {
 					if slices.Contains(group.Modifiers, set.Id) {
 						// Save the item code to Redis.
-						modifierId := demae.CompressUUID(demae.UUID())
+						modifierId = demae.CompressUUID(demae.UUID())
 						if j.KeyExists(set.Modifier.Id) {
 							modifierId, err = j.GetKey(set.Modifier.Id)
 							if err != nil {
-								return nil, 0, err
+								return nil, err
 							}
 						} else {
 							err = j.SetKey(set.Modifier.Id, modifierId)
 							if err != nil {
-								return nil, 0, err
+								return nil, err
 							}
 						}
 
@@ -671,7 +773,7 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 		}
 	}
 
-	return itemModifiers, variation.BasePrice, nil
+	return itemModifiers, nil
 }
 
 func (j *JEClient) getItemsDetails(rest Restaurant) (*Modifiers, error) {

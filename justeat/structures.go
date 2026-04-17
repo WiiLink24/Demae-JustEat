@@ -103,6 +103,14 @@ type Variation struct {
 	NumberOfServings  interface{} `json:"NumberOfServings"`
 }
 
+type DealItemVariation struct {
+	DealItemVariationId string      `json:"DealItemVariationId"`
+	MinChoices          int         `json:"MinChoices"`
+	MaxChoices          int         `json:"MaxChoices"`
+	AdditionPrice       float64     `json:"AdditionPrice"`
+	NumberOfServings    interface{} `json:"NumberOfServings"`
+}
+
 type Modifiers struct {
 	ModifierGroups []struct {
 		Id         string   `json:"Id"`
@@ -112,16 +120,10 @@ type Modifiers struct {
 		Modifiers  []string `json:"Modifiers"`
 	} `json:"ModifierGroups"`
 	DealGroups []struct {
-		Id                 string `json:"Id"`
-		Name               string `json:"Name"`
-		NumberOfChoices    int    `json:"NumberOfChoices"`
-		DealItemVariations []struct {
-			DealItemVariationId string      `json:"DealItemVariationId"`
-			MinChoices          int         `json:"MinChoices"`
-			MaxChoices          int         `json:"MaxChoices"`
-			AdditionPrice       float64     `json:"AdditionPrice"`
-			NumberOfServings    interface{} `json:"NumberOfServings"`
-		} `json:"DealItemVariations"`
+		Id                 string              `json:"Id"`
+		Name               string              `json:"Name"`
+		NumberOfChoices    int                 `json:"NumberOfChoices"`
+		DealItemVariations []DealItemVariation `json:"DealItemVariations"`
 	} `json:"DealGroups"`
 	ModifierSets []struct {
 		Id       string `json:"Id"`
