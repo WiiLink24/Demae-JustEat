@@ -4,12 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/mitchellh/go-wordwrap"
 	"math/rand"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/google/uuid"
+	"github.com/mitchellh/go-wordwrap"
 )
 
 // BoolToInt converts a boolean value to an integer.
@@ -60,7 +61,7 @@ func FloatToString(f float64) string {
 }
 
 func UUID() string {
-	u, _ := uuid.DefaultGenerator.NewV4()
+	u, _ := uuid.NewUUID()
 	return u.String()
 }
 
