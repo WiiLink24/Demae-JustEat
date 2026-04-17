@@ -708,7 +708,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 					copy(thisModifierList, modifierList)
 					parent := demae.ItemOne{
 						XMLName: xml.Name{Local: fmt.Sprintf("container%d", idx)},
-						Info:    demae.CDATA{Value: fmt.Sprintf("Select an item.")},
+						Info:    demae.CDATA{Value: "Select an item."},
 						Code:    demae.CDATA{Value: groupId},
 						Type:    demae.CDATA{Value: buttonType},
 						Name:    demae.CDATA{Value: group.Name},
