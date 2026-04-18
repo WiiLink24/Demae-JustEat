@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/justeat"
 	"github.com/WiiLink24/nwc24"
 	"github.com/getsentry/sentry-go"
 	"github.com/logrusorgru/aurora/v4"
@@ -182,17 +184,19 @@ func PostDiscordWebhook(title, message, url string, color int) {
 // ReportError helps make errors nicer. First it logs the error to Sentry,
 // then writes a response for the server to send.
 func (r *Response) ReportError(err error) {
-	if hub := sentry.GetHubFromContext(r.request.Context()); hub != nil {
-		hub.WithScope(func(s *sentry.Scope) {
-			s.SetTag("Wii ID", r.GetHollywoodId())
-			hub.CaptureException(err)
-		})
+	if !slices.Contains(justeat.NoSentryErrors, err) {
+		if hub := sentry.GetHubFromContext(r.request.Context()); hub != nil {
+			hub.WithScope(func(s *sentry.Scope) {
+				s.SetTag("Wii ID", r.GetHollywoodId())
+				hub.CaptureException(err)
+			})
+		}
+
+		log.Printf("An error has occurred: %s", aurora.Red(err.Error()))
+
+		errorString := fmt.Sprintf("%s\nWii ID: %s\nWii Number: %s", err.Error(), r.GetHollywoodId(), r.request.Header.Get("X-WiiNo"))
+		PostDiscordWebhook("An error has occurred in Demae Just Eat!", errorString, config.ErrorWebhook, 16711711)
 	}
-
-	log.Printf("An error has occurred: %s", aurora.Red(err.Error()))
-
-	errorString := fmt.Sprintf("%s\nWii ID: %s\nWii Number: %s", err.Error(), r.GetHollywoodId(), r.request.Header.Get("X-WiiNo"))
-	PostDiscordWebhook("An error has occurred in Demae Just Eat!", errorString, config.ErrorWebhook, 16711711)
 
 	// With the new patches I created, we can now send the error to the channel.
 	r.AddKVNode("error", err.Error())
