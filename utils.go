@@ -184,8 +184,8 @@ func PostDiscordWebhook(title, message, url string, color int) {
 // then writes a response for the server to send.
 func (r *Response) ReportError(err error) {
 	// Only report errors that can be up-casted to SentryError
-	_, ok := errors.AsType[*demae.SentryError](err)
-	if ok {
+	e, ok := errors.AsType[*demae.SentryError](err)
+	if ok && e.Report {
 		if hub := sentry.GetHubFromContext(r.request.Context()); hub != nil {
 			hub.WithScope(func(s *sentry.Scope) {
 				s.SetTag("Wii ID", r.GetHollywoodId())

@@ -5,6 +5,6 @@ import (
 )
 
 var (
-	ErrNotLinked      = demae.NewSentryError("Please link your Just Eat Account with\nyour WiiLink Account")
-	ErrInvalidCountry = demae.NewSentryError("Your Wii's country does not support\nJust Eat")
+	ErrNotLinked      = demae.NewSentryError("Please link your Just Eat Account with\nyour WiiLink Account", false)
+	ErrInvalidCountry = demae.NewSentryError("Your Wii's country does not support\nJust Eat", false)
 )
