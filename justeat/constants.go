@@ -26,8 +26,10 @@ const (
 // Module names for logger
 const (
 	Address = "ADDRESS"
+	Auth    = "AUTH"
 	_Basket = "BASKET"
 	Image   = "IMAGE"
+	_Menu   = "MENU"
 )
 
 var LanguageCodes = map[Country]string{

@@ -139,12 +139,6 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 }
 
 func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity int) (*Deal, error) {
-	type ModifierPreAdd struct {
-		GroupId    string
-		ModifierId string
-		Quantity   int
-	}
-
 	// Split itemCode into it's parts.
 	itemCodes := strings.Split(itemCode, "|")
 	// dealId := itemCodes[0]
@@ -415,7 +409,12 @@ func (j *JEClient) RemoveItem(basketId string, productId string, r *http.Request
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	fmt.Println(string(body))
 
@@ -429,8 +428,16 @@ func (j *JEClient) getBasket(basketId string) (BasketData, error) {
 		return BasketData{}, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return BasketData{}, err
+	}
 
 	var summary BasketData
 	err = json.Unmarshal(body, &summary)
