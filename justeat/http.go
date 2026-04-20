@@ -73,10 +73,6 @@ func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, 
 	return client.Do(req)
 }
 
-func (j *JEClient) httpPatch(url string, body any) (*http.Response, error) {
-	return j.httpDO(url, body, http.MethodPatch)
-}
-
 func (j *JEClient) httpPut(url string, body any) (*http.Response, error) {
 	return j.httpDO(url, body, http.MethodPut)
 }

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/justeat"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/WiiLink24/nwc24"
 	"github.com/gin-gonic/gin"
 )
@@ -111,7 +112,13 @@ func saveUserData(c *gin.Context) {
 		return
 	}
 
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err = conn.Close()
+		if err != nil {
+			logger.Error("WEBSERVER", err.Error())
+			return
+		}
+	}(conn)
 	_, err = conn.Write(data)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

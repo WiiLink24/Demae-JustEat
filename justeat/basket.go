@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
@@ -21,8 +22,16 @@ func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	// Decode to map and extract
 	var rest Restaurant
@@ -49,7 +58,7 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 	modifierMap := make(map[string]ModifierPreAdd)
 	var modifierGroups []ModifierGroup
 	var err error
-	for items, _ := range r.PostForm {
+	for items := range r.PostForm {
 		if strings.Contains(items, "option") {
 			// Extract the topping type and code
 			var groupID string
@@ -142,7 +151,7 @@ func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity in
 	itemId := itemCodes[1]
 
 	products := make(map[string]DealGroup)
-	for items, _ := range r.PostForm {
+	for items := range r.PostForm {
 		if strings.Contains(items, "option") {
 			// Extract the topping type and code
 			var groupID string
@@ -271,8 +280,16 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	var b struct {
 		BasketId string `json:"BasketId"`
@@ -312,7 +329,12 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 		return ""
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 
 	var b struct {

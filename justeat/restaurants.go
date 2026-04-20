@@ -289,16 +289,6 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 	var orderTimes []demae.KVFieldWChildren
 	var recommendations []demae.Item
 	if menu != nil {
-		basketId := j.FakeBasket(id, menu.MenuGroupId)
-		if basketId != "" {
-			orderTimes, err = j.GetAvailableTimes(basketId)
-			if err != nil {
-				return nil, err
-			}
-
-			orderTimes = nil
-		}
-
 		recommendations, err = j.GetRecommendedItems(id, rest)
 		if err != nil {
 			return nil, err

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 func (j *JEClient) getGeocodedAddress() (long float64, lat float64, city string, e error) {
@@ -23,8 +25,16 @@ func (j *JEClient) getGeocodedAddress() (long float64, lat float64, city string,
 		return 0, 0, "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(Address, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, "", err
+	}
 
 	// Retrieve longitude and latitude
 	var data map[string]any

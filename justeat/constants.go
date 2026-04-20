@@ -1,14 +1,5 @@
 package justeat
 
-import (
-	"errors"
-)
-
-var (
-	UnrecognizedCountry = errors.New("invalid area code passed (unrecognized country)")
-	AddressNotFound     = errors.New("no address was labeled demae")
-)
-
 const (
 	QueryUserData   = `SELECT authentication, expires_at, refresh_token, acr, device_model FROM users WHERE wii_id = $1`
 	UpdateAuthToken = `UPDATE users SET authentication = $1, refresh_token = $2, expires_at = $3 WHERE wii_id = $4`
@@ -32,23 +23,12 @@ const (
 	Invalid       Country = ""
 )
 
-var ClientNames = map[Country]string{
-	Austria:       "consumer_android_je",
-	Germany:       "consumer_android_je",
-	Ireland:       "consumer_android_je",
-	Italy:         "consumer_android_je",
-	Spain:         "consumer_android_je",
-	UnitedKingdom: "consumer_android_je",
-}
-
-var ClientUUIDs = map[Country]string{
-	Austria:       "50158598-42d0-41e4-aaff-9c5419c82215",
-	Germany:       "50158598-42d0-41e4-aaff-9c5419c82215",
-	Ireland:       "50158598-42d0-41e4-aaff-9c5419c82215",
-	Italy:         "50158598-42d0-41e4-aaff-9c5419c82215",
-	Spain:         "50158598-42d0-41e4-aaff-9c5419c82215",
-	UnitedKingdom: "50158598-42d0-41e4-aaff-9c5419c82215",
-}
+// Module names for logger
+const (
+	Address = "ADDRESS"
+	_Basket = "BASKET"
+	Image   = "IMAGE"
+)
 
 var LanguageCodes = map[Country]string{
 	Austria:       "de-AT",

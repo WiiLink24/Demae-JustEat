@@ -75,23 +75,3 @@ func (j *JEClient) GetAvailableTimes(basketId string) ([]demae.KVFieldWChildren,
 
 	return times, err
 }
-
-func (j *JEClient) padTimeString(t string) string {
-	// Format should match 24:59:00
-	stringLength := len(t)
-	if stringLength != 8 {
-		// Safe-ish way to pad this string.
-		for i := stringLength + 1; i < 8; i++ {
-			// Every third character up to EOF is a colon (:).
-			if i+1%3 == 0 {
-				t += ":"
-				continue
-			}
-
-			// Pad with 0s.
-			t += "0"
-		}
-	}
-
-	return t
-}

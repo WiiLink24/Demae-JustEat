@@ -49,22 +49,6 @@ func getActiveOrders(email string) (map[uint32]justeat.WebBasket, error) {
 	return payloads, nil
 }
 
-func getActiveOrderForWii(hollywoodId string) (*justeat.WebBasket, error) {
-	var data string
-	err := pool.QueryRow(ctx, GetOrderForWii, hollywoodId).Scan(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	var payload justeat.WebBasket
-	err = json.Unmarshal([]byte(data), &payload)
-	if err != nil {
-		return nil, err
-	}
-
-	return &payload, nil
-}
-
 func clearOrder(hollywoodId string) error {
 	_, err := pool.Exec(ctx, ClearOrder, hollywoodId)
 	return err
