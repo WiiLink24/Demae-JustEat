@@ -215,6 +215,9 @@ func (j *JEClient) GetMenuCategories(id string) ([]demae.Menu, error) {
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Decode to map and extract
 	var rest Restaurant
@@ -539,7 +542,12 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 		}
 	}
 
-	err = resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 
 	modifiers, err := j.getItemsDetails(rest)
 	if err != nil {

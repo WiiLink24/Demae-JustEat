@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 var (
@@ -42,7 +43,12 @@ func (j *JEClient) GetBareRestaurants() (c []demae.CategoryCode, e error) {
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		e = err
@@ -91,8 +97,16 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Decode to map and extract
 	var data map[string]any
@@ -207,7 +221,12 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 
 	// Decode to map and extract

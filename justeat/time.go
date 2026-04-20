@@ -11,6 +11,7 @@ import (
 	_ "time/tzdata"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 func (j *JEClient) getLocalizedTimeLocation() (*time.Location, error) {
@@ -37,7 +38,12 @@ func (j *JEClient) getAvailableTimes(basketId string) (map[string]any, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 
 	var availability map[string]any
