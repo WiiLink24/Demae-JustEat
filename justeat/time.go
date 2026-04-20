@@ -45,6 +45,9 @@ func (j *JEClient) getAvailableTimes(basketId string) (map[string]any, error) {
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	var availability map[string]any
 	err = json.Unmarshal(body, &availability)

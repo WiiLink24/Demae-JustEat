@@ -228,6 +228,9 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Decode to map and extract
 	var rest Restaurant
