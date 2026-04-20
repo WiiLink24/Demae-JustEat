@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
@@ -21,8 +22,16 @@ func (j *JEClient) GetMenuGroupID(shopID string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	// Decode to map and extract
 	var rest Restaurant
@@ -49,7 +58,7 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 	modifierMap := make(map[string]ModifierPreAdd)
 	var modifierGroups []ModifierGroup
 	var err error
-	for items, _ := range r.PostForm {
+	for items := range r.PostForm {
 		if strings.Contains(items, "option") {
 			// Extract the topping type and code
 			var groupID string
@@ -130,19 +139,13 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 }
 
 func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity int) (*Deal, error) {
-	type ModifierPreAdd struct {
-		GroupId    string
-		ModifierId string
-		Quantity   int
-	}
-
 	// Split itemCode into it's parts.
 	itemCodes := strings.Split(itemCode, "|")
 	// dealId := itemCodes[0]
 	itemId := itemCodes[1]
 
 	products := make(map[string]DealGroup)
-	for items, _ := range r.PostForm {
+	for items := range r.PostForm {
 		if strings.Contains(items, "option") {
 			// Extract the topping type and code
 			var groupID string
@@ -271,8 +274,16 @@ func (j *JEClient) CreateBasket(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	var b struct {
 		BasketId string `json:"BasketId"`
@@ -312,7 +323,12 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 		return ""
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 
 	var b struct {
@@ -393,7 +409,12 @@ func (j *JEClient) RemoveItem(basketId string, productId string, r *http.Request
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	fmt.Println(string(body))
 
@@ -407,8 +428,16 @@ func (j *JEClient) getBasket(basketId string) (BasketData, error) {
 		return BasketData{}, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return BasketData{}, err
+	}
 
 	var summary BasketData
 	err = json.Unmarshal(body, &summary)

@@ -237,7 +237,7 @@ type BasketData struct {
 
 type BasketAdjustment struct {
 	Name       string `json:"name"`
-	Adjustment any    `json:"Adjustment" json:"adjustment"`
+	Adjustment any    `json:"adjustment"`
 }
 
 type BasketSummary struct {

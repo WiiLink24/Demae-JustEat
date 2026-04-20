@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 )
 
 const (
@@ -99,7 +100,12 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 
 	var recs map[string]any
 	err = json.Unmarshal(body, &recs)
@@ -112,7 +118,12 @@ func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]dema
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -197,8 +208,16 @@ func (j *JEClient) GetMenuCategories(id string) ([]demae.Menu, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Decode to map and extract
 	var rest Restaurant
@@ -473,7 +492,12 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 		return nil, 0, err
 	}
 
-	err = resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 
 	_url = fmt.Sprintf("%s/%s", j.GlobalAPIURL, rest.ItemsUrl)
 	resp, err = j.httpGet(_url)
@@ -518,7 +542,12 @@ func (j *JEClient) GetItemData(shopID, categoryID, itemCode string) ([]demae.Ite
 		}
 	}
 
-	err = resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 
 	modifiers, err := j.getItemsDetails(rest)
 	if err != nil {
@@ -570,9 +599,8 @@ func (j *JEClient) GetItemModifiersForDeal(items *Items, variation Variation, mo
 				itemModifiers = append(itemModifiers, curItemModifiers...)
 
 				// Create it ourselves using super evil tactics
-				buttonType := "box"
 				if group.NumberOfChoices == 1 {
-					buttonType = "radio"
+					buttonType := "radio"
 
 					var modifierList []any
 					for _, dealItemVar := range group.DealItemVariations {
@@ -783,7 +811,12 @@ func (j *JEClient) getItemsDetails(rest Restaurant) (*Modifiers, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

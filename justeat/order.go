@@ -3,10 +3,11 @@ package justeat
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/WiiLink24/DemaeJustEat/demae"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/WiiLink24/DemaeJustEat/demae"
 )
 
 func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
@@ -52,7 +53,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 
 		if s, ok := adjustment.Adjustment.(string); ok {
 			adj.Kind = "credit"
-			adj.UnitAmount = strings.Replace(s, "-", "", -1)
+			adj.UnitAmount = strings.ReplaceAll(s, "-", "")
 		} else {
 			adj.UnitAmount = demae.FloatToString(adjustment.Adjustment.(float64))
 			paymentTotal += adjustment.Adjustment.(float64)

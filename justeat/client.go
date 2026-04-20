@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
+	"github.com/WiiLink24/DemaeJustEat/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -69,7 +70,7 @@ func NewClient(ctx context.Context, db *pgxpool.Pool, req *http.Request, hollywo
 
 	err = client.SetAuth()
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, NotLinked
+		return nil, ErrNotLinked
 	} else if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,12 @@ func (j *JEClient) refreshAuthToken(refreshToken, hash string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(Auth, err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -156,6 +162,6 @@ func GetCountry(countryCode string) (Country, error) {
 	case "110":
 		return UnitedKingdom, nil
 	default:
-		return Invalid, InvalidCountry
+		return Invalid, ErrInvalidCountry
 	}
 }

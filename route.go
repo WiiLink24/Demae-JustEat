@@ -8,6 +8,9 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
+// HTTP module for logger
+const HTTP = "HTTP"
+
 type Route struct {
 	Actions []Action
 }
@@ -65,21 +68,21 @@ func (r *RoutingGroup) ServeImage(function func(*Response)) {
 }
 
 func (r *Route) handlerFunc(w http.ResponseWriter, req *http.Request) {
-	logger.Debug("HTTP", req.Method, req.URL.String())
+	logger.Debug(HTTP, req.Method, req.URL.String())
 
 	// If this is a POST request it is either an actual request or an error.
 	var actionName string
 	var serviceType string
 	var userAgent string
 	if req.Method == "POST" {
-		req.ParseForm()
+		_ = req.ParseForm()
 		actionName = req.PostForm.Get("action")
 		userAgent = req.PostForm.Get("platform")
 		serviceType = "nwapi.php"
 	} else {
 		actionName = req.URL.Query().Get("action")
 		userAgent = req.URL.Query().Get("platform")
-		serviceType = strings.Replace(req.URL.Path, "/", "", -1)
+		serviceType = strings.ReplaceAll(req.URL.Path, "/", "")
 	}
 
 	if userAgent != "wii" && !strings.Contains(req.URL.Path, "img") {
@@ -130,7 +133,7 @@ func (r *Route) handlerFunc(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Write([]byte(contents))
+	_, _ = w.Write([]byte(contents))
 }
 
 func (r *Route) Handle() http.Handler {

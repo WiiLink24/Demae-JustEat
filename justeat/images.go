@@ -4,19 +4,22 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"golang.org/x/image/draw"
 	"image"
 	"image/jpeg"
-	"log"
+	"io"
 	"net/http"
 	"os"
 	"strings"
 
-	// Image detection
-	_ "golang.org/x/image/webp"
+	"github.com/WiiLink24/DemaeJustEat/logger"
+	"golang.org/x/image/draw"
+
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+
+	// Image detection
+	_ "golang.org/x/image/webp"
 )
 
 func (j *JEClient) DownloadLogo(url, filename string) {
@@ -25,26 +28,31 @@ func (j *JEClient) DownloadLogo(url, filename string) {
 		return
 	} else if os.IsNotExist(err) {
 	} else {
-		log.Println("really bad thing happened on disk")
+		logger.Error(Image, err.Error())
+		return
 	}
 
 	err = os.MkdirAll("logos", 0777)
 	if err != nil {
-		// TODO: Proper logger
-		log.Println("failed to mkdir")
+		logger.Error(Image, err.Error())
 		return
 	}
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Println("failed to get image")
+		logger.Error(Image, err.Error())
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(Image, err.Error())
+		}
+	}(resp.Body)
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {
-		log.Println("failed to decode gif")
+		logger.Error(Image, err.Error())
 		return
 	}
 
@@ -54,45 +62,51 @@ func (j *JEClient) DownloadLogo(url, filename string) {
 	var out bytes.Buffer
 	err = jpeg.Encode(bufio.NewWriter(&out), newImage, nil)
 	if err != nil {
-		log.Println("failed to encode image")
+		logger.Error(Image, err.Error())
 		return
 	}
 
 	err = os.WriteFile(fmt.Sprintf("logos/%s.jpg", filename), out.Bytes(), 0666)
 	if err != nil {
-		log.Println("failed to save image")
+		logger.Error(Image, err.Error())
 		return
 	}
 }
 
 func (j *JEClient) DownloadFoodImage(path string, restaurantID string, itemID string) {
-	path = strings.Replace(path, "{transformations}", "h_160,w_160", -1)
+	path = strings.ReplaceAll(path, "{transformations}", "h_160,w_160")
 
 	_, err := os.Stat(fmt.Sprintf("logos/%s/%s.jpg", restaurantID, itemID))
 	if err == nil {
 		return
 	} else if os.IsNotExist(err) {
 	} else {
-		log.Println("really bad thing happened on disk")
+		logger.Error(Image, err.Error())
+		return
+
 	}
 
 	err = os.MkdirAll(fmt.Sprintf("logos/%s", restaurantID), 0777)
 	if err != nil {
-		// TODO: Proper logger
-		log.Println("failed to mkdir")
+		logger.Error(Image, err.Error())
 		return
 	}
 
 	resp, err := http.Get(path)
 	if err != nil {
-		log.Println("failed to get image")
+		logger.Error(Image, err.Error())
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(Image, err.Error())
+		}
+	}(resp.Body)
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {
-		log.Println("failed to decode gif")
+		logger.Error(Image, err.Error())
 		return
 	}
 
@@ -102,13 +116,13 @@ func (j *JEClient) DownloadFoodImage(path string, restaurantID string, itemID st
 	var out bytes.Buffer
 	err = jpeg.Encode(bufio.NewWriter(&out), newImage, nil)
 	if err != nil {
-		log.Println("failed to encode image")
+		logger.Error(Image, err.Error())
 		return
 	}
 
 	err = os.WriteFile(fmt.Sprintf("logos/%s/%s.jpg", restaurantID, itemID), out.Bytes(), 0666)
 	if err != nil {
-		log.Println("failed to save image")
+		logger.Error(Image, err.Error())
 		return
 	}
 }

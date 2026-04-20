@@ -119,7 +119,10 @@ func main() {
 				log.Println("failed to read image")
 			}
 
-			(*r.writer).Write(data)
+			_, err = (*r.writer).Write(data)
+			if err != nil {
+				logger.Error(HTTP, err.Error())
+			}
 		})
 	}
 
@@ -134,8 +137,10 @@ func main() {
 				log.Println("failed to read image")
 			}
 
-			(*r.writer).Write(img)
-			return
+			_, err = (*r.writer).Write(img)
+			if err != nil {
+				logger.Error(HTTP, err.Error())
+			}
 		})
 	}
 
