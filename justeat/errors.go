@@ -1,8 +1,10 @@
 package justeat
 
-import "errors"
+import (
+	"github.com/WiiLink24/DemaeJustEat/demae"
+)
 
 var (
-	ErrNotLinked      = errors.New("please link your Just Eat Account with\nyour WiiLink Account")
-	ErrInvalidCountry = errors.New("your Wii's country does not support\nJust Eat")
+	ErrNotLinked      = demae.NewSentryError("Please link your Just Eat Account with\nyour WiiLink Account")
+	ErrInvalidCountry = demae.NewSentryError("Your Wii's country does not support\nJust Eat")
 )
