@@ -26,7 +26,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			UnitAmount: demae.FloatToString(item.UnitPrice),
 		})
 
-		paymentTotal += item.UnitPrice
+		paymentTotal += float64(item.Quantity) * item.UnitPrice
 	}
 
 	// Deals
@@ -38,7 +38,7 @@ func (j *JEClient) PlaceOrder(r *http.Request, basketId string) error {
 			UnitAmount: demae.FloatToString(deal.UnitPrice),
 		})
 
-		paymentTotal += deal.UnitPrice
+		paymentTotal += float64(deal.Quantity) * deal.UnitPrice
 	}
 
 	// Per giustino:
