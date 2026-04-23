@@ -23,7 +23,7 @@
                         {{ $formattedWiiNumber := printf "%s-%s-%s-%s" (slice $order.WiiNumber 0 4) (slice
                         $order.WiiNumber 4 8) (slice $order.WiiNumber 8 12) (slice $order.WiiNumber 12 16) }}
                         <option value="{{ $order.WiiNumber }}">{{
-                            $order.Basket.Total }}{{ $order.Basket.CurrencyISOCode }} ({{
+                            $order.Basket.Total | formatDecimal 2 }}{{ $order.Basket.CurrencyISOCode }} ({{
                             $formattedWiiNumber }})</option>
                         {{ end }}
                     </select>
@@ -41,7 +41,7 @@
                                             <span class="text-gray-400 mr-2">{{ $item.Quantity }}x</span>
                                             <span class="text-gray-200">{{ $item.Name }}</span>
                                         </div>
-                                        <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount
+                                        <span class="w-32 text-right text-white font-medium">{{ $item.UnitAmount | formatDecimal 2 }}
                                             }} {{
                                             $order.Basket.CurrencyISOCode }}</span>
                                     </div>
@@ -63,7 +63,7 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-300 text-lg">Total</span>
                                     <span class="text-white font-bold text-2xl">{{
-                                        $order.Basket.Total }} <span class="text-lg font-medium">{{
+                                        $order.Basket.Total | formatDecimal 2 }} <span class="text-lg font-medium">{{
                                             $order.Basket.CurrencyISOCode }}</span></span>
                                 </div>
                             </div>
@@ -135,7 +135,7 @@
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-300 text-lg">Total</span>
                                             <span class="text-white font-bold text-2xl">{{
-                                                $order.Basket.Total }} <span
+                                                $order.Basket.Total | formatDecimal 2 }} <span
                                                     class="text-lg font-medium">{{
                                                     $order.Basket.CurrencyISOCode }}</span></span>
                                         </div>
