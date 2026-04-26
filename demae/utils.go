@@ -59,6 +59,13 @@ func FloatToString(f float64) string {
 	return strconv.FormatFloat(f, 'g', -1, 64)
 }
 
+func FormatDecimal(f float64, precision int) string {
+	formatted := strconv.FormatFloat(f, 'f', precision, 64)
+	formatted = strings.TrimRight(formatted, "0")
+	formatted = strings.TrimRight(formatted, ".")
+	return formatted
+}
+
 func UUID() string {
 	u, _ := uuid.NewUUID()
 	return u.String()
