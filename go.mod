@@ -8,7 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.45.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/redis/go-redis/v9 v9.18.0
