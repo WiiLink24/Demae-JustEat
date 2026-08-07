@@ -13,7 +13,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/remizovm/geonames v0.1.0
-	golang.org/x/image v0.39.0
+	golang.org/x/image v0.41.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/text v0.37.0
 )
