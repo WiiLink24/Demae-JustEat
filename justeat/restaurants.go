@@ -144,8 +144,9 @@ func (j *JEClient) GetRestaurants(code demae.CategoryCode) ([]demae.BasicShop, e
 			continue
 		}
 
+		// Skip restaurants that do not deliver
 		if !restaurant.(map[string]any)["isDelivery"].(bool) {
-			break
+			continue
 		}
 
 		// Store minimum delivery price in the cache.
