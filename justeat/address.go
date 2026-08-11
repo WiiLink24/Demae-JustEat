@@ -69,7 +69,7 @@ func (j *JEClient) getGeocodedAddress() (long float64, lat float64, city string,
 	}
 	lat, err = strconv.ParseFloat(results[0].Lat, 64)
 	if err != nil {
-		return 0, 0, "", fmt.Errorf("failed to parse longitude: %w", err)
+		return 0, 0, "", fmt.Errorf("failed to parse latitude: %w", err)
 	}
 
 	if len(results[0].Address.Village) > 0 {
