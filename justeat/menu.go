@@ -373,7 +373,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 			return nil, err
 		}
 	} else {
-		err = j.SetKey(item.Id, itemId)
+		err = j.SetKeyReversible(item.Id, itemId)
 		if err != nil {
 			return nil, err
 		}
@@ -405,7 +405,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 				return nil, err
 			}
 		} else {
-			err = j.SetKey(dealItemCode, dealItemCodeForDemae)
+			err = j.SetKeyReversible(dealItemCode, dealItemCodeForDemae)
 			if err != nil {
 				return nil, err
 			}
@@ -432,7 +432,7 @@ func (j *JEClient) getItem(item Item, shopID string, categoryID string, modifier
 					return nil, err
 				}
 			} else {
-				err = j.SetKey(variation.Id, itemCode)
+				err = j.SetKeyReversible(variation.Id, itemCode)
 				if err != nil {
 					return nil, err
 				}
@@ -619,7 +619,7 @@ func (j *JEClient) GetItemModifiersForDeal(items *Items, variation Variation, mo
 								return nil, err
 							}
 						} else {
-							err = j.SetKey(idToSave, modifierId)
+							err = j.SetKeyReversible(idToSave, modifierId)
 							if err != nil {
 								return nil, err
 							}
@@ -688,7 +688,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 					return nil, err
 				}
 			} else {
-				err := j.SetKey(group.Id, groupId)
+				err := j.SetKeyReversible(group.Id, groupId)
 				if err != nil {
 					return nil, err
 				}
@@ -711,7 +711,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 								return nil, err
 							}
 						} else {
-							err = j.SetKey(set.Modifier.Id, modifierId)
+							err = j.SetKeyReversible(set.Modifier.Id, modifierId)
 							if err != nil {
 								return nil, err
 							}
@@ -774,7 +774,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 								return nil, err
 							}
 						} else {
-							err = j.SetKey(set.Modifier.Id, modifierId)
+							err = j.SetKeyReversible(set.Modifier.Id, modifierId)
 							if err != nil {
 								return nil, err
 							}
