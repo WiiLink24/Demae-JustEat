@@ -13,18 +13,21 @@ import (
 // See PR for the disassembly
 const MaxFieldBytes = 127
 
+// Show ellipse for better UX. "…" is 3 bytes in UTF-8, same as "...": 127 - 3 = 124 bytes left for content.
+const ellipsis = "…"
+
 // TruncateField cuts s down to MaxFieldBytes, on a rune boundary.
 func TruncateField(s string) string {
 	if len(s) <= MaxFieldBytes {
 		return s
 	}
 
-	cut := MaxFieldBytes
+	cut := MaxFieldBytes - len(ellipsis)
 	for cut > 0 && !utf8.RuneStart(s[cut]) {
 		cut--
 	}
 
-	return s[:cut]
+	return s[:cut] + ellipsis
 }
 
 // MarshalXML writes the value as CDATA and truncates it on the way out.
