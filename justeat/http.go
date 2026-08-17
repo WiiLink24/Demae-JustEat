@@ -128,17 +128,13 @@ func (j *JEClient) PayPalPOST(url string, body url.Values, headers map[string]st
 }
 
 // HttpGet is a safe, simple function for non Just Eat requests
-func HttpGet(url string, userAgent ...string) ([]byte, error) {
+func HttpGet(url string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", "WiiLink Demae Just Eat Server")
-
-	if len(userAgent) > 0 && userAgent[0] != "" {
-		req.Header.Set("User-Agent", userAgent[0])
-	}
 
 	var resp *http.Response
 	for i := 0; i < 5; i++ {
