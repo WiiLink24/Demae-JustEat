@@ -7,8 +7,9 @@ const (
 	InsertUser      = `INSERT INTO users (authentication, expires_at, refresh_token, acr, device_model, email, wii_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (wii_id) DO UPDATE SET authentication = EXCLUDED.authentication, expires_at = EXCLUDED.expires_at, refresh_token = EXCLUDED.refresh_token, acr = EXCLUDED.acr, device_model = EXCLUDED.device_model, email = EXCLUDED.email`
 )
 
-// MaxNumberOfRestaurants is required due to Wii memory constraints.
-const MaxNumberOfRestaurants = 15
+// MaxNumberOfRestaurants caps how many restaurants are returned per category.
+// The channel imposes no limit of its own
+const MaxNumberOfRestaurants = 50
 
 // Country is one that is supported by Just Eat
 type Country string

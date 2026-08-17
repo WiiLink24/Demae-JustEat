@@ -24,13 +24,13 @@ func BoolToInt(b bool) int {
 func RemoveInvalidCharacters(input string) string {
 	result := make([]rune, 0, len(input))
 
-	for i, r := range input {
+	for _, r := range input {
 		// Keep only printable ASCII and some specific Unicode ranges
 		if r < 128 || unicode.IsLetter(r) || unicode.IsNumber(r) || unicode.IsPunct(r) || unicode.IsSpace(r) {
 			result = append(result, r)
 		} else {
 			// If it was invalid and the previous char was a space, we want to pop it.
-			if i == 0 {
+			if len(result) == 0 {
 				continue
 			}
 
