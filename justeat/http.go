@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var UserAgent = func(deviceId string) string {
@@ -122,4 +125,41 @@ func (j *JEClient) PayPalPOST(url string, body url.Values, headers map[string]st
 	}
 
 	return client.Do(req)
+}
+
+// HttpGet is a safe, simple function for non Just Eat requests
+func HttpGet(url string) ([]byte, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "WiiLink Demae Just Eat Server")
+
+	var resp *http.Response
+	for i := 0; i < 5; i++ {
+		resp, err = client.Do(req)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request to %v failed: %v", url, err)
+	} else if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP request to %v failed: Status Code %v", url, resp.StatusCode)
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println("error closing body:", err)
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
