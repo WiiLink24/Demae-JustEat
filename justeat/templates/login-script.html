@@ -1,0 +1,85 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const gravatarUrl = pfp + "?d=404";
+    let pfpdata = `
+     <span id="edit" class="mb-2 w-full !text-white text-md p-2 rounded-lg bg-slate-600/60 flex flex-col gap-1 hidden">
+        <a href="https://gravatar.com/profile" class="w-full px-4 py-2 bg-slate-800/60 hover:bg-slate-900/60 rounded-t-lg rounded-b-md flex flex-row items-center gap-3 transition-all" style="text-decoration:none !important;"><img src="/assets/icon/palette.svg" alt="Icon" class="w-5 h-5 invert mr-2" /> Edit your profile</a>
+        <a href="https://sso.riiconnect24.net/if/user/#/settings" class="w-full px-4 py-2 bg-slate-800/60 hover:bg-slate-900/60 rounded-md flex flex-row items-center gap-3 transition-all" style="text-decoration:none !important;"><img src="/assets/icon/settings.svg" alt="Icon" class="w-5 h-5 invert mr-2" /> Settings</a>
+                            <a href="https://wiilink.ca/#donate"
+                    class="w-full px-4 py-2 bg-green-300/70 hover:bg-green-300/80 text-white rounded-t-md rounded-b-lg transition duration-200 flex items-center">
+                    <img src="/assets/icon/dollar-sign.svg" alt="Icon" class="w-5 h-5 invert mr-2" /> Donate
+                </a>
+    </span>
+    <span onclick="toggleSidebar()" class="p-1 px-2 rounded-lg hover:bg-slate-600/60 w-full flex flex-row items-center justify-between gap-3 overflow-hidden transition-all cursor-pointer">
+      <img
+        src="${gravatarUrl}"
+        class="w-10 h-10 bg-gray-300 dark:bg-slate-900/60 rounded-md"
+      />
+      <span class="flex flex-col items-start overflow-hidden">
+        <span class="w-full truncate text-lg font-bold text-white">${username}</span>
+        <span class="w-full truncate text-sm text-gray-400">${email}</span>
+      </span>
+    </span>
+
+    <hr class="my-4 opacity-10">
+
+    <a href="/logout"
+    onclick="document.cookie = 'is_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.wiilink.ca; secure;';"
+                    class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors group my-4">
+                    <img src="/assets/icon/log-out.svg" alt="Logout"
+                        class="w-5 h-5 invert group-hover:-translate-x-1 transition-transform duration-200" />
+                    <span>Logout</span>
+                </a>
+    `;
+
+    function setCookie(name, value, days) {
+      const date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      const expires = "expires=" + date.toUTCString();
+      document.cookie =
+        name +
+        "=" +
+        value +
+        ";" +
+        expires +
+        ";path=/;domain=.wiilink.ca;Secure";
+    }
+
+    setCookie(
+      "wiilink_user",
+      JSON.stringify({ username: username, pfp: pfp }),
+      7
+    );
+    setCookie("is_logged_in", "true", 7);
+
+    // Function to set username initial
+    function setUsernameInitial() {
+      const initial = username.charAt(0).toUpperCase();
+
+      pfpdata = `
+        <div class="bg-gradient-to-tr from-blue-400 to-green-500 rounded-md h-full w-full flex items-center justify-center">
+          <span class="username-initial text-2xl font-bold text-white capitalize">${initial}</span>
+        </div>
+      `;
+
+      document.getElementById("pfp").innerHTML = pfpdata;
+    }
+
+    fetch(gravatarUrl)
+      .then((response) => {
+        if (response.status === 404) {
+          setUsernameInitial();
+        }
+        document.getElementById("logged_in_sidebar").innerHTML = pfpdata;
+      })
+      .catch((error) => {
+        console.error("Error fetching Gravatar:", error);
+        setUsernameInitial();
+      });
+  });
+
+  function toggleSidebar() {
+    const editMenu = document.getElementById("edit");
+    editMenu.classList.toggle("hidden");
+  }
+</script>

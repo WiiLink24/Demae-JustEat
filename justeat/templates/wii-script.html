@@ -1,0 +1,44 @@
+<script>
+  function formatNumberWithDashes(numberString) {
+    const digits = numberString.replace(/\D/g, "");
+    return digits.match(/.{1,4}/g).join("-");
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        alert(`Copied: ${text}`);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    let pfpdata = `
+    <span class="mb-3 p-2 px-3 rounded-lg bg-slate-600/30 w-full flex flex-col gap-3 overflow-hidden transition-all">
+      <span>
+        <h3 class="!m-0 text-lg text-white font-semibold">Linked Wii Numbers</h3>
+        <p class="text-white opacity-60">These are the Wii Numbers linked to your account:</p>
+      </span>
+      <hr class="opacity-10">
+      <span class="mb-2 flex flex-col gap-1">
+      ${wiiNumbers
+        .map(
+          (num) =>
+            `<span class="px-2 py-1 flex flex-row items-center justify-between rounded-lg bg-slate-600/80 text-sm text-white">${formatNumberWithDashes(
+              num
+            )} <img onclick="copyToClipboard(${
+              num
+            })" src="/assets/icon/copy.svg" class="w-5 h-5 invert"></span>`
+        )
+        .join("")}
+      </span>
+    </span>
+    `;
+
+    console.log("Wii Numbers:", wiiNumbers);
+    document.getElementById("wii_data_sidebar").innerHTML = pfpdata;
+  });
+</script>
