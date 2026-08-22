@@ -628,7 +628,7 @@ func (j *JEClient) GetItemModifiersForDeal(items *Items, variation Variation, mo
 						modifierList = append(modifierList, &demae.Item{
 							MenuCode:  demae.CDATA{Value: group.Id},
 							ItemCode:  demae.CDATA{Value: modifierId},
-							Name:      demae.CDATA{Value: demae.Wordwrap(item.Name, 18, 2)},
+							Name:      demae.CDATA{Value: demae.Wordwrap(item.Name, 32, 3)},
 							Price:     demae.CDATA{Value: dealItemVar.AdditionPrice},
 							Info:      demae.CDATA{Value: "None yet"},
 							Size:      nil,
@@ -720,7 +720,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 						modifierList = append(modifierList, &demae.Item{
 							MenuCode:  demae.CDATA{Value: groupId},
 							ItemCode:  demae.CDATA{Value: modifierId},
-							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
+							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 32, 3)},
 							Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
 							Info:      demae.CDATA{Value: "None yet"},
 							Size:      nil,
@@ -783,7 +783,7 @@ func (j *JEClient) GetItemModifiers(variation Variation, modifiers *Modifiers) (
 						parent.List.Value = append(parent.List.Value, demae.Item{
 							MenuCode:  demae.CDATA{Value: groupId},
 							ItemCode:  demae.CDATA{Value: modifierId},
-							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 18, 2)},
+							Name:      demae.CDATA{Value: demae.Wordwrap(set.Modifier.Name, 32, 3)},
 							Price:     demae.CDATA{Value: set.Modifier.AdditionPrice},
 							Info:      demae.CDATA{Value: "None yet"},
 							Size:      nil,
