@@ -241,7 +241,7 @@ func (j *JEClient) GetRestaurant(id string) (*demae.ShopOne, error) {
 	}
 
 	menu, err := j.getCorrectMenu(rest.Menus)
-	if err != nil {
+	if err != nil && err != ErrNoMenuAvailable {
 		return nil, err
 	}
 

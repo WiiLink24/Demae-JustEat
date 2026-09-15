@@ -53,12 +53,12 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (*Menu, error) {
 			}
 
 			for _, timeStruct := range schedule.Times {
-				start, err := time.Parse("15:04:05", timeStruct.FromLocalTime)
+				start, err := time.ParseInLocation("15:04:05", timeStruct.FromLocalTime, zone)
 				if err != nil {
 					return nil, err
 				}
 
-				end, err := time.Parse("15:04:05", timeStruct.ToLocalTime)
+				end, err := time.ParseInLocation("15:04:05", timeStruct.ToLocalTime, zone)
 				if err != nil {
 					return nil, err
 				}
@@ -107,6 +107,8 @@ func (j *JEClient) GetProductCategoryIDs(shopID string) (map[string]string, erro
 	categoryIDs := make(map[string]string)
 	for _, category := range menu.Categories {
 		for _, itemID := range category.ItemIds {
+			// strip the "|DELIVERY"/"|COLLECTION" suffix a basket line's ProductId never has
+			itemID, _, _ = strings.Cut(itemID, "|")
 			categoryIDs[itemID] = category.Id
 		}
 	}

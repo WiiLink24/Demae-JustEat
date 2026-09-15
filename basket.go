@@ -204,7 +204,6 @@ func basketModify(r *Response) {
 		return
 	}
 
-	// unlike basket_delete (a GET), basket_modify is a POST, so basketNo is in the form body
 	basketNo := r.request.PostForm.Get("basketNo")
 	ref, err := client.GetBasketItemIndex(basketId, basketNo)
 	if errors.Is(err, justeat.ErrBasketItemIndexNotFound) {
