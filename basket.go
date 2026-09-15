@@ -18,8 +18,26 @@ const (
 	ClearBasket      = `UPDATE users SET basket_id = NULL WHERE wii_id = $1`
 	InsertBasketID   = `UPDATE users SET basket_id = $1 WHERE wii_id = $2`
 	DoesBasketExist  = `SELECT EXISTS(SELECT 1 FROM users WHERE users.wii_id = $1 AND users.basket_id IS NOT NULL)`
-	GetBasketID      = `SELECT basket_id FROM users WHERE wii_id = $1`
+	// COALESCE avoids a NULL scan panic when a Wii has no basket
+	GetBasketID = `SELECT COALESCE(basket_id, '') FROM users WHERE wii_id = $1`
 )
+
+// ErrNoBasket means the Wii has no basket right now (never created, reset, or emptied)
+var ErrNoBasket = demae.NewSentryError("Your basket is empty. Please add an\nitem first.", false)
+
+// getBasketID wraps the NULL case as ErrNoBasket instead of a raw NULL scan error
+func getBasketID(hollywoodID string) (string, error) {
+	var basketId string
+	if err := pool.QueryRow(context.Background(), GetBasketID, hollywoodID).Scan(&basketId); err != nil {
+		return "", err
+	}
+
+	if basketId == "" {
+		return "", ErrNoBasket
+	}
+
+	return basketId, nil
+}
 
 func authKey(r *Response) {
 	authKeyValue := demae.UUID()
@@ -73,8 +91,7 @@ func basketAdd(r *Response) {
 
 	if basketExists {
 		// Edit basket
-		var basketId string
-		err = pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+		basketId, err := getBasketID(r.GetHollywoodId())
 		if err != nil {
 			r.ReportError(err)
 			return
@@ -102,8 +119,7 @@ func basketAdd(r *Response) {
 }
 
 func basketList(r *Response) {
-	var basketId string
-	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+	basketId, err := getBasketID(r.GetHollywoodId())
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -133,8 +149,7 @@ func basketReset(r *Response) {
 }
 
 func basketDelete(r *Response) {
-	var basketId string
-	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+	basketId, err := getBasketID(r.GetHollywoodId())
 	if err != nil {
 		r.ReportError(err)
 		return
@@ -164,15 +179,27 @@ func basketDelete(r *Response) {
 }
 
 func basketModify(r *Response) {
-	var basketId string
-	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
 	if err != nil {
 		r.ReportError(err)
 		return
 	}
 
-	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
-	if err != nil {
+	// "Change" always POSTs basket_modify, even if the item's already gone -> handle as a fresh add
+	basketId, err := getBasketID(r.GetHollywoodId())
+	if err == ErrNoBasket {
+		newBasketId, err := client.CreateBasket(r.request)
+		if err != nil {
+			r.ReportError(err)
+			return
+		}
+
+		_, err = pool.Exec(context.Background(), InsertBasketID, newBasketId, r.GetHollywoodId())
+		if err != nil {
+			r.ReportError(err)
+		}
+		return
+	} else if err != nil {
 		r.ReportError(err)
 		return
 	}
@@ -180,8 +207,13 @@ func basketModify(r *Response) {
 	// unlike basket_delete (a GET), basket_modify is a POST, so basketNo is in the form body
 	basketNo := r.request.PostForm.Get("basketNo")
 	ref, err := client.GetBasketItemIndex(basketId, basketNo)
-	if err != nil {
-		r.ReportError(justeat.ErrBasketItemNotFound)
+	if errors.Is(err, justeat.ErrBasketItemIndexNotFound) {
+		if err := client.EditBasket(basketId, r.request); err != nil {
+			r.ReportError(err)
+		}
+		return
+	} else if err != nil {
+		r.ReportError(err)
 		return
 	}
 
@@ -192,8 +224,7 @@ func basketModify(r *Response) {
 }
 
 func orderDone(r *Response) {
-	var basketId string
-	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+	basketId, err := getBasketID(r.GetHollywoodId())
 	if err != nil {
 		r.errorCode = http.StatusInternalServerError
 		r.ReportError(err)
