@@ -3,6 +3,7 @@ package justeat
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -475,11 +476,34 @@ func (j *JEClient) getBasket(basketId string) (BasketData, error) {
 	return summary, err
 }
 
+func lookupCategoryID(categoryIDs map[string]string, productId string) string {
+	if id, ok := categoryIDs[productId]; ok {
+		return id
+	}
+
+	if idx := strings.LastIndex(productId, "-"); idx != -1 {
+		if id, ok := categoryIDs[productId[:idx]]; ok {
+			return id
+		}
+	}
+
+	return ""
+}
+
 // GetBasket returns the basket in a Demae usable structure.
 func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 	summary, err := j.getBasket(basketId)
 	if err != nil {
 		return nil, err
+	}
+
+	// real category IDs let the Wii resolve menuCode back to a category on "Change"
+	var categoryIDs map[string]string
+	if r != nil && r.URL != nil && r.URL.Query().Get("shopCode") != "" {
+		categoryIDs, err = j.GetProductCategoryIDs(r.URL.Query().Get("shopCode"))
+		if err != nil && !errors.Is(err, ErrNoMenuAvailable) {
+			return nil, err
+		}
 	}
 
 	// itemIndex numbers lines across Products and Deals since basket_delete only echoes back this position
@@ -538,7 +562,7 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		basketItems = append(basketItems, demae.BasketItem{
 			XMLName:       xml.Name{Local: fmt.Sprintf("container%d", itemIndex)},
 			BasketNo:      demae.CDATA{Value: itemIndex},
-			MenuCode:      demae.CDATA{Value: 1},
+			MenuCode:      demae.CDATA{Value: lookupCategoryID(categoryIDs, product.ProductId)},
 			ItemCode:      demae.CDATA{Value: productCode},
 			Name:          demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(product.Name), 26, -1)},
 			Price:         demae.CDATA{Value: priceStr},
@@ -645,7 +669,7 @@ func (j *JEClient) GetBasket(basketId string, r *http.Request) ([]any, error) {
 		basketItems = append(basketItems, demae.BasketItem{
 			XMLName:       xml.Name{Local: fmt.Sprintf("container%d", itemIndex)},
 			BasketNo:      demae.CDATA{Value: itemIndex},
-			MenuCode:      demae.CDATA{Value: 1},
+			MenuCode:      demae.CDATA{Value: lookupCategoryID(categoryIDs, product.ProductId)},
 			ItemCode:      demae.CDATA{Value: dealCode},
 			Name:          demae.CDATA{Value: demae.Wordwrap(demae.RemoveInvalidCharacters(product.Name), 26, -1)},
 			Price:         demae.CDATA{Value: priceStr},
