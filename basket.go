@@ -163,6 +163,34 @@ func basketDelete(r *Response) {
 	}
 }
 
+func basketModify(r *Response) {
+	var basketId string
+	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)
+	if err != nil {
+		r.ReportError(err)
+		return
+	}
+
+	client, err := justeat.NewClient(ctx, pool, r.request, r.GetHollywoodId(), rdb)
+	if err != nil {
+		r.ReportError(err)
+		return
+	}
+
+	// unlike basket_delete (a GET), basket_modify is a POST, so basketNo is in the form body
+	basketNo := r.request.PostForm.Get("basketNo")
+	ref, err := client.GetBasketItemIndex(basketId, basketNo)
+	if err != nil {
+		r.ReportError(justeat.ErrBasketItemNotFound)
+		return
+	}
+
+	err = client.ModifyBasketItem(basketId, ref, r.request)
+	if err != nil {
+		r.ReportError(err)
+	}
+}
+
 func orderDone(r *Response) {
 	var basketId string
 	err := pool.QueryRow(context.Background(), GetBasketID, r.GetHollywoodId()).Scan(&basketId)

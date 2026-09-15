@@ -340,52 +340,43 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 	return b.BasketId
 }
 
-func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
-	var err error
-	itemCode := r.PostForm.Get("itemCode")
-	itemCode, err = j.GetKey(itemCode)
+// buildAddEdit builds the Added half of a BasketEdit from the form, shared by EditBasket and ModifyBasketItem
+func (j *JEClient) buildAddEdit(basketId string, r *http.Request) (BasketEdit, error) {
+	itemCode, err := j.GetKey(r.PostForm.Get("itemCode"))
 	if err != nil {
-		return err
+		return BasketEdit{}, err
 	}
 
-	quantityStr := r.PostForm.Get("quantity")
-
-	quantity, err := strconv.Atoi(quantityStr)
+	quantity, err := strconv.Atoi(r.PostForm.Get("quantity"))
 	if err != nil {
-		return err
+		return BasketEdit{}, err
 	}
 
-	var products []Product
-	var deals []Deal
+	edit := BasketEdit{BasketId: basketId}
 	itemCodes := strings.Split(itemCode, "|")
 	if len(itemCodes) == 3 {
 		deal, err := j.formDealProduct(r, itemCode, quantity)
 		if err != nil {
-			return err
+			return BasketEdit{}, err
 		}
 
-		deals = append(deals, *deal)
+		edit.Deal.Added = []Deal{*deal}
 	} else {
 		product, err := j.formProduct(r, itemCode, quantity)
 		if err != nil {
-			return err
+			return BasketEdit{}, err
 		}
 
-		products = append(products, *product)
+		edit.Product.Added = []Product{*product}
 	}
 
-	edit := BasketEdit{
-		BasketId: basketId,
-		Product: BasketStatusProduct{
-			Added:   products,
-			Updated: nil,
-			Removed: nil,
-		},
-		Deal: BasketStatusDeal{
-			Added:   deals,
-			Updated: nil,
-			Removed: nil,
-		},
+	return edit, nil
+}
+
+func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
+	edit, err := j.buildAddEdit(basketId, r)
+	if err != nil {
+		return err
 	}
 
 	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
@@ -448,6 +439,45 @@ func (j *JEClient) RemoveItem(basketId string, ref BasketItemRef) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return ErrBasketRemovalFailed
+	}
+
+	return nil
+}
+
+// ModifyBasketItem does two sequential PUTs since one PUT with both removed and added drops the added half
+func (j *JEClient) ModifyBasketItem(basketId string, oldRef BasketItemRef, r *http.Request) error {
+	if len(oldRef.BasketProductIds) == 0 {
+		return ErrNoBasketProductIds
+	}
+
+	// build the replacement before removing anything so a failed modifier lookup leaves the old line intact
+	edit, err := j.buildAddEdit(basketId, r)
+	if err != nil {
+		return err
+	}
+
+	if err := j.RemoveItem(basketId, oldRef); err != nil {
+		return err
+	}
+
+	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
+	if err != nil {
+		return err
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Basket, err.Error())
+		}
+	}(resp.Body)
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return ErrBasketEditFailed
 	}
 
 	return nil

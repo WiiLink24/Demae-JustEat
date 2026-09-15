@@ -29,6 +29,7 @@ type Client interface {
 	GetBasket(basketId string, r *http.Request) ([]any, error)
 	EditBasket(basketId string, r *http.Request) error
 	RemoveItem(basketId string, ref BasketItemRef) error
+	ModifyBasketItem(basketId string, oldRef BasketItemRef, r *http.Request) error
 	PlaceOrder(r *http.Request, basketId string) error
 	GetBasketItemIndex(basketId string, index string) (BasketItemRef, error)
 }
