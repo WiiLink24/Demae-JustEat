@@ -119,6 +119,11 @@ func (j *JEClient) refreshAuthToken(refreshToken, hash string) (string, error) {
 			logger.Error(Auth, err.Error())
 		}
 	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("refreshAuthToken: Just Eat rejected the refresh (status %d)", resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -133,6 +138,10 @@ func (j *JEClient) refreshAuthToken(refreshToken, hash string) (string, error) {
 	err = json.Unmarshal(body, &temp)
 	if err != nil {
 		return "", err
+	}
+
+	if temp.AccessToken == "" || temp.RefreshToken == "" || temp.ExpiresIn <= 0 {
+		return "", errors.New("refreshAuthToken: Just Eat returned an incomplete token response")
 	}
 
 	// Now save to database
