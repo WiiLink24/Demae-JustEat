@@ -72,7 +72,7 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (*Menu, error) {
 		}
 	}
 
-	return nil, nil
+	return nil, ErrNoMenuAvailable
 }
 
 func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]demae.Item, error) {
