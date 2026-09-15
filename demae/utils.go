@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/go-wordwrap"
+	"golang.org/x/text/unicode/norm"
 )
 
 // BoolToInt converts a boolean value to an integer.
@@ -22,11 +23,13 @@ func BoolToInt(b bool) int {
 }
 
 func RemoveInvalidCharacters(input string) string {
+	input = norm.NFKC.String(input)
+
 	result := make([]rune, 0, len(input))
 
 	for _, r := range input {
 		// Keep only printable ASCII and some specific Unicode ranges
-		if r < 128 || unicode.IsLetter(r) || unicode.IsNumber(r) || unicode.IsPunct(r) || unicode.IsSpace(r) {
+		if r < 128 || unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsPunct(r) || unicode.IsSpace(r) {
 			result = append(result, r)
 		} else {
 			// If it was invalid and the previous char was a space, we want to pop it.
