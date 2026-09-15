@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -145,9 +146,18 @@ func basketDelete(r *Response) {
 		return
 	}
 
-	// Actually the product ID
-	productID := r.request.URL.Query().Get("basketNo")
-	err = client.RemoveItem(basketId, productID, r.request)
+	// basketNo is the item's position, not a product ID
+	basketNo := r.request.URL.Query().Get("basketNo")
+	ref, err := client.GetBasketItemIndex(basketId, basketNo)
+	if errors.Is(err, justeat.ErrBasketItemIndexNotFound) {
+		r.ReportError(justeat.ErrBasketItemNotFound)
+		return
+	} else if err != nil {
+		r.ReportError(err)
+		return
+	}
+
+	err = client.RemoveItem(basketId, ref)
 	if err != nil {
 		r.ReportError(err)
 	}

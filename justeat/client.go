@@ -28,8 +28,9 @@ type Client interface {
 	CreateBasket(r *http.Request) (string, error)
 	GetBasket(basketId string, r *http.Request) ([]any, error)
 	EditBasket(basketId string, r *http.Request) error
-	RemoveItem(basketId string, productId string, r *http.Request) error
+	RemoveItem(basketId string, ref BasketItemRef) error
 	PlaceOrder(r *http.Request, basketId string) error
+	GetBasketItemIndex(basketId string, index string) (BasketItemRef, error)
 }
 
 type JEClient struct {
