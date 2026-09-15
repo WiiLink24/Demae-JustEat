@@ -33,3 +33,11 @@ func TestRemoveInvalidCharactersLeadingEmoji(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveInvalidCharacters_Subscript(t *testing.T) {
+	got := RemoveInvalidCharacters("Getränke mit H₂CO₃")
+	want := "Getränke mit H2CO3"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
