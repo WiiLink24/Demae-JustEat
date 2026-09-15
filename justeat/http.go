@@ -16,6 +16,8 @@ var UserAgent = func(deviceId string) string {
 	return fmt.Sprintf("[JUST-EAT-APP/%s/Android - %s - 11 (API 30)]", ApplicationVersion, deviceId)
 }
 
+var HTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 const (
 	ApplicationID      = "4"
 	ApplicationVersion = "11.0.0.1610004768"
@@ -26,7 +28,6 @@ const (
 )
 
 func (j *JEClient) httpGet(url string) (*http.Response, error) {
-	client := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
 
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
@@ -41,7 +42,7 @@ func (j *JEClient) httpGet(url string) (*http.Response, error) {
 	req.Header.Set("X-Jet-Application-Id", JetApplicationID)
 	req.Header.Set("X-Jet-Application-Version", JetVersion)
 
-	return client.Do(req)
+	return HTTPClient.Do(req)
 }
 
 func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, error) {
@@ -51,7 +52,6 @@ func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, 
 		return nil, err
 	}
 
-	client := &http.Client{}
 	req, _ := http.NewRequest(method, url, bytes.NewReader(data))
 
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
@@ -73,7 +73,7 @@ func (j *JEClient) httpDO(url string, body any, method string) (*http.Response, 
 	req.Header.Set("X-Jet-Application-Id", JetApplicationID)
 	req.Header.Set("X-Jet-Application-Version", JetVersion)
 
-	return client.Do(req)
+	return HTTPClient.Do(req)
 }
 
 func (j *JEClient) httpPut(url string, body any) (*http.Response, error) {
@@ -86,7 +86,6 @@ func (j *JEClient) httpPost(url string, body any) (*http.Response, error) {
 
 // unauthorizedPost is a POST request specifically for the refresh token endpoint.
 func (j *JEClient) unauthorizedPost(url string, body url.Values) (*http.Response, error) {
-	client := &http.Client{}
 	req, _ := http.NewRequest("POST", url, strings.NewReader(body.Encode()))
 
 	req.Header.Set("User-Agent", UserAgent(j.DeviceModel))
@@ -97,34 +96,7 @@ func (j *JEClient) unauthorizedPost(url string, body url.Values) (*http.Response
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("X-Jet-Application", "OneWeb")
 
-	return client.Do(req)
-}
-
-func (j *JEClient) BrainTreePOST(url string, body any, headers map[string]string) (*http.Response, error) {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &http.Client{}
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(data))
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	return client.Do(req)
-}
-
-func (j *JEClient) PayPalPOST(url string, body url.Values, headers map[string]string) (*http.Response, error) {
-	client := &http.Client{}
-	req, _ := http.NewRequest("POST", url, strings.NewReader(body.Encode()))
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	return client.Do(req)
+	return HTTPClient.Do(req)
 }
 
 // HttpGet is a safe, simple function for non Just Eat requests
