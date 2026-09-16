@@ -53,12 +53,12 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (*Menu, error) {
 			}
 
 			for _, timeStruct := range schedule.Times {
-				start, err := time.Parse("15:04:05", timeStruct.FromLocalTime)
+				start, err := time.ParseInLocation("15:04:05", timeStruct.FromLocalTime, zone)
 				if err != nil {
 					return nil, err
 				}
 
-				end, err := time.Parse("15:04:05", timeStruct.ToLocalTime)
+				end, err := time.ParseInLocation("15:04:05", timeStruct.ToLocalTime, zone)
 				if err != nil {
 					return nil, err
 				}
@@ -73,6 +73,47 @@ func (j *JEClient) getCorrectMenu(menus []Menu) (*Menu, error) {
 	}
 
 	return nil, ErrNoMenuAvailable
+}
+
+// GetProductCategoryIDs maps ProductId to category ID for the "Change" menuCode lookup
+func (j *JEClient) GetProductCategoryIDs(shopID string) (map[string]string, error) {
+	_url := fmt.Sprintf("%s/%s_%s_manifest.json", j.GlobalAPIURL, shopID, strings.ToLower(string(j.Country)))
+	resp, err := j.httpGet(_url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error(_Menu, err.Error())
+		}
+	}(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var rest Restaurant
+	if err := json.Unmarshal(body, &rest); err != nil {
+		return nil, err
+	}
+
+	menu, err := j.getCorrectMenu(rest.Menus)
+	if err != nil {
+		return nil, err
+	}
+
+	categoryIDs := make(map[string]string)
+	for _, category := range menu.Categories {
+		for _, itemID := range category.ItemIds {
+			// strip the "|DELIVERY"/"|COLLECTION" suffix a basket line's ProductId never has
+			itemID, _, _ = strings.Cut(itemID, "|")
+			categoryIDs[itemID] = category.Id
+		}
+	}
+
+	return categoryIDs, nil
 }
 
 func (j *JEClient) GetRecommendedItems(id string, restaurant Restaurant) ([]demae.Item, error) {

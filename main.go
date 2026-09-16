@@ -99,6 +99,7 @@ func main() {
 		nwapi.MultipleRootNodes("webApi_item_one", itemOne)
 		nwapi.MultipleRootNodes("webApi_Authkey", authKey)
 		nwapi.MultipleRootNodes("webApi_basket_add", basketAdd)
+		nwapi.MultipleRootNodes("webApi_basket_modify", basketModify)
 		nwapi.MultipleRootNodes("webApi_basket_list", basketList)
 		nwapi.MultipleRootNodes("webApi_basket_delete", basketDelete)
 		nwapi.MultipleRootNodes("webApi_basket_reset", basketReset)

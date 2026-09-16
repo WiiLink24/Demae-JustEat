@@ -209,12 +209,13 @@ type RequestedModifierGroup struct {
 }
 
 type RequestedBasket struct {
-	Name           string                   `json:"Name"`
-	UnitPrice      float64                  `json:"UnitPrice"`
-	TotalPrice     float64                  `json:"TotalPrice"`
-	ProductId      string                   `json:"ProductId"`
-	Quantity       int                      `json:"Quantity"`
-	ModifierGroups []RequestedModifierGroup `json:"ModifierGroups"`
+	Name             string                   `json:"Name"`
+	UnitPrice        float64                  `json:"UnitPrice"`
+	TotalPrice       float64                  `json:"TotalPrice"`
+	ProductId        string                   `json:"ProductId"`
+	Quantity         int                      `json:"Quantity"`
+	ModifierGroups   []RequestedModifierGroup `json:"ModifierGroups"`
+	BasketProductIds []string                 `json:"BasketProductIds"`
 }
 
 type RequestedDeal struct {
