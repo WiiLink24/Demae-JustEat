@@ -3,6 +3,7 @@ package justeat
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 var ErrBasketItemIndexNotFound = errors.New("basket item index not found")
 
-const basketItemIndexTTL = 3 * time.Hour
+const redisTTL = 3 * time.Hour
 
 // basketItemRef is what basketDelete needs to remove a line: its type and Just Eat IDs
 type BasketItemRef struct {
@@ -22,19 +23,19 @@ type BasketItemRef struct {
 
 // SetKey sets a key with a value in redis if it does not already exist.
 func (j *JEClient) SetKeyReversible(key string, value string) error {
-	err := j.rdb.Set(j.Context, key, value, 3*time.Hour).Err()
+	err := j.rdb.Set(j.Context, key, value, redisTTL).Err()
 	if err != nil {
 		return err
 	}
-	return j.rdb.Set(j.Context, value, key, 3*time.Hour).Err()
+	return j.rdb.Set(j.Context, value, key, redisTTL).Err()
 }
 
 func (j *JEClient) SetKey(key string, value string) error {
-	return j.rdb.Set(j.Context, key, value, 3*time.Hour).Err()
+	return j.rdb.Set(j.Context, key, value, redisTTL).Err()
 }
 
 func (j *JEClient) GetKey(key string) (string, error) {
-	return j.rdb.GetEx(j.Context, key, 3*time.Hour).Result()
+	return j.rdb.GetEx(j.Context, key, redisTTL).Result()
 }
 
 func (j *JEClient) KeyExists(key string) bool {
@@ -44,18 +45,27 @@ func (j *JEClient) KeyExists(key string) bool {
 // ShortenID handles IDs demae.CompressUUID can't and stays stable across repeat calls for the same id
 func (j *JEClient) ShortenID(id string) (string, error) {
 	if j.KeyExists(id) {
-		return j.GetKey(id)
+		short, err := j.GetKey(id)
+		if err != nil {
+			return "", err
+		}
+
+		if err := j.rdb.Expire(j.Context, short, redisTTL).Err(); err != nil {
+			return "", err
+		}
+
+		return short, nil
 	}
 
 	short := demae.CompressUUID(demae.UUID())
-	_, err := j.rdb.SetArgs(j.Context, id, short, redis.SetArgs{Mode: "NX", TTL: 3 * time.Hour}).Result()
+	_, err := j.rdb.SetArgs(j.Context, id, short, redis.SetArgs{Mode: "NX", TTL: redisTTL}).Result()
 	if errors.Is(err, redis.Nil) {
 		return j.GetKey(id)
 	} else if err != nil {
 		return "", err
 	}
 
-	if err := j.rdb.Set(j.Context, short, id, 3*time.Hour).Err(); err != nil {
+	if err := j.rdb.Set(j.Context, short, id, redisTTL).Err(); err != nil {
 		return "", err
 	}
 
@@ -68,7 +78,7 @@ func (j *JEClient) SetBasketItems(basketId string, refs []BasketItemRef) error {
 		return err
 	}
 
-	return j.rdb.Set(j.Context, "items:"+basketId, value, basketItemIndexTTL).Err()
+	return j.rdb.Set(j.Context, "items:"+basketId, value, redisTTL).Err()
 }
 
 func (j *JEClient) GetBasketItemIndex(basketId string, index string) (BasketItemRef, error) {
@@ -77,15 +87,8 @@ func (j *JEClient) GetBasketItemIndex(basketId string, index string) (BasketItem
 		return BasketItemRef{}, ErrBasketItemIndexNotFound
 	}
 
-	raw, err := j.rdb.Get(j.Context, "items:"+basketId).Result()
-	if errors.Is(err, redis.Nil) {
-		return BasketItemRef{}, ErrBasketItemIndexNotFound
-	} else if err != nil {
-		return BasketItemRef{}, err
-	}
-
-	var refs []BasketItemRef
-	if err := json.Unmarshal([]byte(raw), &refs); err != nil {
+	refs, err := j.getBasketItems(basketId)
+	if err != nil {
 		return BasketItemRef{}, err
 	}
 
@@ -94,4 +97,38 @@ func (j *JEClient) GetBasketItemIndex(basketId string, index string) (BasketItem
 	}
 
 	return refs[i], nil
+}
+
+// getBasketItems reads back what SetBasketItems last stored, refreshing its TTL like GetKey does
+func (j *JEClient) getBasketItems(basketId string) ([]BasketItemRef, error) {
+	raw, err := j.rdb.GetEx(j.Context, "items:"+basketId, redisTTL).Result()
+	if errors.Is(err, redis.Nil) {
+		return nil, ErrBasketItemIndexNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	var refs []BasketItemRef
+	if err := json.Unmarshal([]byte(raw), &refs); err != nil {
+		return nil, err
+	}
+
+	return refs, nil
+}
+
+func (j *JEClient) RemoveBasketItemIndex(basketId string, ref BasketItemRef) error {
+	refs, err := j.getBasketItems(basketId)
+	if errors.Is(err, ErrBasketItemIndexNotFound) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	for i, r := range refs {
+		if r.IsDeal == ref.IsDeal && slices.Equal(r.BasketProductIds, ref.BasketProductIds) {
+			return j.SetBasketItems(basketId, slices.Delete(refs, i, i+1))
+		}
+	}
+
+	return nil
 }

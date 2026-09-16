@@ -17,7 +17,6 @@ const (
 	InsertAuthkey    = `UPDATE users SET auth_key = $1 WHERE wii_id = $2`
 	ClearBasket      = `UPDATE users SET basket_id = NULL WHERE wii_id = $1`
 	InsertBasketID   = `UPDATE users SET basket_id = $1 WHERE wii_id = $2`
-	DoesBasketExist  = `SELECT EXISTS(SELECT 1 FROM users WHERE users.wii_id = $1 AND users.basket_id IS NOT NULL)`
 	// COALESCE avoids a NULL scan panic when a Wii has no basket
 	GetBasketID = `SELECT COALESCE(basket_id, '') FROM users WHERE wii_id = $1`
 )
@@ -80,29 +79,8 @@ func basketAdd(r *Response) {
 		return
 	}
 
-	// Determine if we have a basket
-	var basketExists bool
-	row := pool.QueryRow(context.Background(), DoesBasketExist, r.GetHollywoodId())
-	err = row.Scan(&basketExists)
-	if err != nil {
-		r.ReportError(err)
-		return
-	}
-
-	if basketExists {
-		// Edit basket
-		basketId, err := getBasketID(r.GetHollywoodId())
-		if err != nil {
-			r.ReportError(err)
-			return
-		}
-
-		err = client.EditBasket(basketId, r.request)
-		if err != nil {
-			r.ReportError(err)
-			return
-		}
-	} else {
+	basketId, err := getBasketID(r.GetHollywoodId())
+	if errors.Is(err, ErrNoBasket) {
 		// Create basket
 		basketId, err := client.CreateBasket(r.request)
 		if err != nil {
@@ -113,8 +91,16 @@ func basketAdd(r *Response) {
 		_, err = pool.Exec(context.Background(), InsertBasketID, basketId, r.GetHollywoodId())
 		if err != nil {
 			r.ReportError(err)
-			return
 		}
+		return
+	} else if err != nil {
+		r.ReportError(err)
+		return
+	}
+
+	// Edit basket
+	if err := client.EditBasket(basketId, r.request); err != nil {
+		r.ReportError(err)
 	}
 }
 
@@ -187,7 +173,7 @@ func basketModify(r *Response) {
 
 	// "Change" always POSTs basket_modify, even if the item's already gone -> handle as a fresh add
 	basketId, err := getBasketID(r.GetHollywoodId())
-	if err == ErrNoBasket {
+	if errors.Is(err, ErrNoBasket) {
 		newBasketId, err := client.CreateBasket(r.request)
 		if err != nil {
 			r.ReportError(err)

@@ -76,13 +76,10 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 					}
 				case 2:
 					// Modifier Group ID
-					// Can be possible to have duplicates of a modifier. In this case we want to increment the quantity.
-					isDupe := false
+					// a repeat selection carries an "_N" suffix, strip it
 					notModifiedId := strings.Split(s, "]")[0]
 					if notModifiedId[len(notModifiedId)-2] == '_' {
-						// We got one. We should also strip the suffix.
 						notModifiedId = notModifiedId[:len(notModifiedId)-2]
-						isDupe = true
 					}
 
 					modifierID, err = j.GetKey(notModifiedId)
@@ -90,15 +87,14 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 						return nil, err
 					}
 
-					if isDupe {
-						if m, ok := modifierMap[modifierID]; ok {
-							m.Quantity++
-						} else {
-							modifierMap[modifierID] = ModifierPreAdd{
-								GroupId:    groupID,
-								ModifierId: modifierID,
-								Quantity:   1,
-							}
+					if m, ok := modifierMap[modifierID]; ok {
+						m.Quantity++
+						modifierMap[modifierID] = m
+					} else {
+						modifierMap[modifierID] = ModifierPreAdd{
+							GroupId:    groupID,
+							ModifierId: modifierID,
+							Quantity:   1,
 						}
 					}
 				}
@@ -129,7 +125,7 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 	}
 
 	product := Product{
-		Date:               time.Now().UTC().Format("2006-01-02T15:01:05.000Z"),
+		Date:               time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),
 		ProductId:          itemCode,
 		Quantity:           quantity,
 		ModifierGroups:     modifierGroups,
@@ -140,10 +136,9 @@ func (j *JEClient) formProduct(r *http.Request, itemCode string, quantity int) (
 }
 
 func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity int) (*Deal, error) {
-	// Split itemCode into it's parts.
+	// the item id is always the last part
 	itemCodes := strings.Split(itemCode, "|")
-	// dealId := itemCodes[0]
-	itemId := itemCodes[1]
+	itemId := itemCodes[len(itemCodes)-1]
 
 	products := make(map[string]DealGroup)
 	for items := range r.PostForm {
@@ -173,10 +168,11 @@ func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity in
 
 					key = strings.Split(key, "|")[0]
 					if m, ok := products[groupID]; ok {
-						m.Products = append(products[groupID].Products, Product{
+						m.Products = append(m.Products, Product{
 							ProductId: key,
 							Quantity:  1,
 						})
+						products[groupID] = m
 					} else {
 						products[groupID] = DealGroup{
 							DealGroupId: groupID,
@@ -199,7 +195,7 @@ func (j *JEClient) formDealProduct(r *http.Request, itemCode string, quantity in
 	}
 
 	return &Deal{
-		Date:           time.Now().UTC().Format("2006-01-02T15:01:05.000Z"),
+		Date:           time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),
 		ProductId:      itemId,
 		Quantity:       quantity,
 		ModifierGroups: nil,
@@ -340,8 +336,8 @@ func (j *JEClient) FakeBasket(shopCode, menuGroupId string) string {
 	return b.BasketId
 }
 
-// buildAddEdit builds the Added half of a BasketEdit from the form, shared by EditBasket and ModifyBasketItem
-func (j *JEClient) buildAddEdit(basketId string, r *http.Request) (BasketEdit, error) {
+// buildAddEdit builds the Added half of a BasketEdit
+func (j *JEClient) buildAddEdit(basketId string, r *http.Request, forceDeal *bool) (BasketEdit, error) {
 	itemCode, err := j.GetKey(r.PostForm.Get("itemCode"))
 	if err != nil {
 		return BasketEdit{}, err
@@ -352,9 +348,13 @@ func (j *JEClient) buildAddEdit(basketId string, r *http.Request) (BasketEdit, e
 		return BasketEdit{}, err
 	}
 
+	isDeal := len(strings.Split(itemCode, "|")) == 2
+	if forceDeal != nil {
+		isDeal = *forceDeal
+	}
+
 	edit := BasketEdit{BasketId: basketId}
-	itemCodes := strings.Split(itemCode, "|")
-	if len(itemCodes) == 3 {
+	if isDeal {
 		deal, err := j.formDealProduct(r, itemCode, quantity)
 		if err != nil {
 			return BasketEdit{}, err
@@ -373,12 +373,8 @@ func (j *JEClient) buildAddEdit(basketId string, r *http.Request) (BasketEdit, e
 	return edit, nil
 }
 
-func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
-	edit, err := j.buildAddEdit(basketId, r)
-	if err != nil {
-		return err
-	}
-
+// putBasketEdit PUTs edit and returns failErr on a non-200
+func (j *JEClient) putBasketEdit(basketId string, edit BasketEdit, failErr error) error {
 	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
 	if err != nil {
 		return err
@@ -396,10 +392,19 @@ func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ErrBasketEditFailed
+		return failErr
 	}
 
 	return nil
+}
+
+func (j *JEClient) EditBasket(basketId string, r *http.Request) error {
+	edit, err := j.buildAddEdit(basketId, r, nil)
+	if err != nil {
+		return err
+	}
+
+	return j.putBasketEdit(basketId, edit, ErrBasketEditFailed)
 }
 
 // RemoveItem removes a line by its BasketProductIds since Just Eat no-ops a removal keyed by its ProductId
@@ -421,37 +426,17 @@ func (j *JEClient) RemoveItem(basketId string, ref BasketItemRef) error {
 		edit.Product = BasketStatusProduct{Removed: removed}
 	}
 
-	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
-	if err != nil {
+	if err := j.putBasketEdit(basketId, edit, ErrBasketRemovalFailed); err != nil {
 		return err
 	}
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			logger.Error(_Basket, err.Error())
-		}
-	}(resp.Body)
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ErrBasketRemovalFailed
-	}
-
-	return nil
+	return j.RemoveBasketItemIndex(basketId, ref)
 }
 
 // ModifyBasketItem does two sequential PUTs since one PUT with both removed and added drops the added half
 func (j *JEClient) ModifyBasketItem(basketId string, oldRef BasketItemRef, r *http.Request) error {
-	if len(oldRef.BasketProductIds) == 0 {
-		return ErrNoBasketProductIds
-	}
-
 	// build the replacement before removing anything so a failed modifier lookup leaves the old line intact
-	edit, err := j.buildAddEdit(basketId, r)
+	edit, err := j.buildAddEdit(basketId, r, &oldRef.IsDeal)
 	if err != nil {
 		return err
 	}
@@ -460,27 +445,7 @@ func (j *JEClient) ModifyBasketItem(basketId string, oldRef BasketItemRef, r *ht
 		return err
 	}
 
-	resp, err := j.httpPut(fmt.Sprintf("%s/basket/%s", j.KongAPIURL, basketId), edit)
-	if err != nil {
-		return err
-	}
-
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			logger.Error(_Basket, err.Error())
-		}
-	}(resp.Body)
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ErrBasketEditFailed
-	}
-
-	return nil
+	return j.putBasketEdit(basketId, edit, ErrBasketEditFailed)
 }
 
 // getBasket returns the basket object from Just Eat.
