@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/WiiLink24/DemaeJustEat/demae"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -60,6 +61,9 @@ func RunServer(config *demae.Config) {
 	}
 
 	r := gin.Default()
+	r.SetFuncMap(template.FuncMap{
+		"formatDecimal": demae.FormatDecimal,
+	})
 	r.LoadHTMLGlob("./justeat/templates/*")
 
 	r.GET("/", func(c *gin.Context) {
