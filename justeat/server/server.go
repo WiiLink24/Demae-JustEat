@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	ctx        = context.Background()
-	pool       *pgxpool.Pool
-	authConfig *demae.AppAuthConfig
-	verifier   *oidc.IDTokenVerifier
+	ctx            = context.Background()
+	pool           *pgxpool.Pool
+	authConfig     *demae.AppAuthConfig
+	verifier       *oidc.IDTokenVerifier
+	deviceVerifier *oidc.IDTokenVerifier
 )
 
 func checkError(err error) {
@@ -30,6 +31,11 @@ func checkError(err error) {
 func RunServer(config *demae.Config) {
 	// OAuth2 config
 	provider, err := oidc.NewProvider(ctx, config.OIDCConfig.Provider)
+	if err != nil {
+		log.Fatalf("Failed to create OIDC provider: %v", err)
+	}
+
+	deviceProvider, err := oidc.NewProvider(ctx, config.OIDCConfig.DeviceProvider)
 	if err != nil {
 		log.Fatalf("Failed to create OIDC provider: %v", err)
 	}
@@ -46,6 +52,7 @@ func RunServer(config *demae.Config) {
 	}
 
 	verifier = provider.Verifier(&oidc.Config{ClientID: config.OIDCConfig.ClientID})
+	deviceVerifier = deviceProvider.Verifier(&oidc.Config{ClientID: config.OIDCConfig.DeviceClientID})
 
 	// Open a Postgres pool for this goroutine only.
 	dbString := fmt.Sprintf("postgres://%s:%s@%s/%s", config.SQLUser, config.SQLPass, config.SQLAddress, config.SQLDB)
@@ -80,7 +87,7 @@ func RunServer(config *demae.Config) {
 	}
 
 	authLink := r.Group("/")
-	authLink.Use(AuthenticationLinkerMiddleware(verifier))
+	authLink.Use(AuthenticationLinkerMiddleware(deviceVerifier))
 	{
 		authLink.POST("/link", saveUserData)
 	}

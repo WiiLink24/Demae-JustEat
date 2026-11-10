@@ -19,9 +19,11 @@
 
     <oidc>
         <clientID></clientID>
+        <deviceClientID></deviceClientID>
         <clientSecret></clientSecret>
         <redirectURL></redirectURL>
         <scopes>openid profile email</scopes>
         <provider></provider>
+        <deviceProvider></deviceProvider>
     </oidc>
 </Config>

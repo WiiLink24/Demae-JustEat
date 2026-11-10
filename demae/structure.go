@@ -8,12 +8,14 @@ import (
 )
 
 type OIDCConfig struct {
-	XMLName      xml.Name `xml:"oidc"`
-	ClientID     string   `xml:"clientID"`
-	ClientSecret string   `xml:"clientSecret"`
-	RedirectURL  string   `xml:"redirectURL"`
-	Scopes       []string `xml:"scopes"`
-	Provider     string   `xml:"provider"`
+	XMLName        xml.Name `xml:"oidc"`
+	ClientID       string   `xml:"clientID"`
+	DeviceClientID string   `xml:"deviceClientID"`
+	ClientSecret   string   `xml:"clientSecret"`
+	RedirectURL    string   `xml:"redirectURL"`
+	Scopes         []string `xml:"scopes"`
+	Provider       string   `xml:"provider"`
+	DeviceProvider string   `xml:"deviceProvider"`
 }
 
 type Config struct {
